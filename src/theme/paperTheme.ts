@@ -17,6 +17,8 @@ export const lightColors = {
   inkSubtle: '#9AA0B5',
   track: '#EEF0F7',
   line: '#ECEEF6',
+  accent: '#2D50C8',
+  accentSoft: '#E8EDFB',
   danger: '#D9484A',
 } as const;
 
@@ -28,9 +30,11 @@ export const darkColors = {
   surface: '#171B26',
   ink: '#E7EAF3',
   inkMuted: '#9AA2BC',
-  inkSubtle: '#6C7490',
+  inkSubtle: '#8791AF',
   track: '#232939',
   line: '#252B3B',
+  accent: '#9FB2F5',
+  accentSoft: '#232B47',
   danger: '#F2706F',
 } as const;
 

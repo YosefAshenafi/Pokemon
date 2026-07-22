@@ -17,6 +17,7 @@ import { darkColors, lightColors, paperDarkTheme, paperLightTheme } from '@/them
 // NativeWind only auto-maps className on core RN components; third-party
 // components must be registered explicitly.
 cssInterop(Image, { className: 'style' });
+cssInterop(MaterialCommunityIcons, { className: 'style' });
 
 // Paper resolves icons from react-native-vector-icons, which isn't installed.
 // Point it at Expo's bundled MaterialCommunityIcons instead.

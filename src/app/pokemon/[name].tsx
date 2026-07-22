@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
@@ -127,10 +128,13 @@ export default function DetailScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`${formatName(move.name)} move`}
                   accessibilityHint="Opens move details"
-                  className="rounded-full bg-track px-3 py-1"
+                  className="flex-row items-center rounded-full bg-accent-soft py-1 pl-3 pr-1.5"
                   style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
                 >
-                  <Text className="text-xs text-ink-muted">{formatName(move.name)}</Text>
+                  <Text className="text-xs font-semibold text-accent">
+                    {formatName(move.name)}
+                  </Text>
+                  <MaterialCommunityIcons name="chevron-right" size={14} className="text-accent" />
                 </Pressable>
               ))}
             </View>
@@ -138,10 +142,11 @@ export default function DetailScreen() {
               <Button
                 mode="text"
                 compact
+                icon={showAllMoves ? 'chevron-up' : 'chevron-down'}
                 onPress={() => setShowAllMoves((current) => !current)}
                 style={{ alignSelf: 'flex-start', marginTop: 8 }}
               >
-                {showAllMoves ? 'Show less' : `See all ${moves.length}`}
+                {showAllMoves ? 'Show less' : 'See all'}
               </Button>
             ) : null}
           </SectionCard>

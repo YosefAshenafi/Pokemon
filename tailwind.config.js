@@ -21,6 +21,10 @@ module.exports = {
         },
         track: 'var(--color-track)',
         line: 'var(--color-line)',
+        accent: {
+          DEFAULT: 'var(--color-accent)',
+          soft: 'var(--color-accent-soft)',
+        },
       },
     },
   },
