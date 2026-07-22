@@ -1,5 +1,6 @@
 import {
   artworkUrl,
+  formatEffectText,
   formatHeightFeetInches,
   formatHeightMeters,
   formatName,
@@ -8,6 +9,7 @@ import {
   formatWeightKg,
   formatWeightLbs,
   idFromUrl,
+  spriteUrl,
 } from '../format';
 
 describe('formatPokemonId', () => {
@@ -78,6 +80,26 @@ describe('artworkUrl', () => {
     expect(artworkUrl(1)).toBe(
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png',
     );
+  });
+});
+
+describe('spriteUrl', () => {
+  it('points at the small default sprite', () => {
+    expect(spriteUrl(10033)).toBe(
+      'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10033.png',
+    );
+  });
+});
+
+describe('formatEffectText', () => {
+  it('fills in the effect chance placeholder', () => {
+    expect(formatEffectText('Has a $effect_chance% chance to burn.', 10)).toBe(
+      'Has a 10% chance to burn.',
+    );
+  });
+
+  it('leaves text unchanged when there is no effect chance', () => {
+    expect(formatEffectText('Never misses.', null)).toBe('Never misses.');
   });
 });
 

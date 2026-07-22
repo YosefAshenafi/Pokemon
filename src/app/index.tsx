@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Text, useColorScheme, View } from 'react-native';
 import { ActivityIndicator, Searchbar } from 'react-native-paper';
+
+import { darkColors, lightColors } from '@/theme/paperTheme';
 
 import type { PokemonSummary } from '@/api/types';
 import { ErrorState } from '@/components/ErrorState';
@@ -15,6 +17,7 @@ const SKELETON_COUNT = 8;
 
 export default function ListScreen() {
   const router = useRouter();
+  const isDark = useColorScheme() === 'dark';
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const isSearching = query.trim().length > 0;
@@ -58,7 +61,11 @@ export default function ListScreen() {
           accessibilityLabel="Search Pokémon by name"
           mode="bar"
           elevation={0}
-          style={{ marginTop: 16, borderRadius: 28, backgroundColor: '#FFFFFF' }}
+          style={{
+            marginTop: 16,
+            borderRadius: 28,
+            backgroundColor: isDark ? darkColors.surface : lightColors.surface,
+          }}
           inputStyle={{ fontSize: 14 }}
         />
       </ScreenHeader>

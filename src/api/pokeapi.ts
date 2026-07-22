@@ -1,6 +1,6 @@
 import { idFromUrl } from '@/utils/format';
 
-import type { Pokemon, PokemonListResponse, PokemonSummary } from './types';
+import type { Move, Pokemon, PokemonListResponse, PokemonSummary } from './types';
 
 export const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
 
@@ -16,7 +16,7 @@ export class ApiError extends Error {
   }
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
+async function fetchJson<T>(path: string, notFoundMessage = 'Pokémon not found.'): Promise<T> {
   let response: Response;
   try {
     response = await fetch(`${POKEAPI_BASE_URL}${path}`, {
@@ -28,9 +28,7 @@ async function fetchJson<T>(path: string): Promise<T> {
 
   if (!response.ok) {
     throw new ApiError(
-      response.status === 404
-        ? 'Pokémon not found.'
-        : `PokeAPI request failed (${response.status}).`,
+      response.status === 404 ? notFoundMessage : `PokeAPI request failed (${response.status}).`,
       response.status,
     );
   }
@@ -59,6 +57,12 @@ export async function getPokemonPage(
 export function getPokemon(nameOrId: string | number): Promise<Pokemon> {
   const key = String(nameOrId).trim().toLowerCase();
   return fetchJson<Pokemon>(`/pokemon/${encodeURIComponent(key)}`);
+}
+
+/** Full detail for a single move by name or numeric id. */
+export function getMove(nameOrId: string | number): Promise<Move> {
+  const key = String(nameOrId).trim().toLowerCase();
+  return fetchJson<Move>(`/move/${encodeURIComponent(key)}`, 'Move not found.');
 }
 
 /**

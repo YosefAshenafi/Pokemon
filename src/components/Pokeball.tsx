@@ -3,12 +3,13 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 interface PokeballProps {
   size?: number;
   style?: StyleProp<ViewStyle>;
+  color?: string;
 }
 
 const WHITE_16 = 'rgba(255, 255, 255, 0.16)';
 
 /** Decorative pokéball watermark drawn with plain Views (no image asset). */
-export function Pokeball({ size = 150, style }: PokeballProps) {
+export function Pokeball({ size = 150, style, color = WHITE_16 }: PokeballProps) {
   const ring = Math.round(size * 0.09);
   const innerHeight = size - ring * 2;
 
@@ -23,7 +24,7 @@ export function Pokeball({ size = 150, style }: PokeballProps) {
           height: size,
           borderRadius: size / 2,
           borderWidth: ring,
-          borderColor: WHITE_16,
+          borderColor: color,
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
@@ -38,7 +39,7 @@ export function Pokeball({ size = 150, style }: PokeballProps) {
           right: 0,
           top: innerHeight / 2 - ring / 2,
           height: ring,
-          backgroundColor: WHITE_16,
+          backgroundColor: color,
         }}
       />
       <View
@@ -47,7 +48,7 @@ export function Pokeball({ size = 150, style }: PokeballProps) {
           height: size * 0.3,
           borderRadius: (size * 0.3) / 2,
           borderWidth: Math.max(ring - 2, 2),
-          borderColor: WHITE_16,
+          borderColor: color,
         }}
       />
     </View>

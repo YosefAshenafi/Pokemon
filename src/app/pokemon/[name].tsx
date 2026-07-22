@@ -1,16 +1,15 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ActivityIndicator, Button, IconButton } from 'react-native-paper';
 
+import { Artwork } from '@/components/Artwork';
 import { ErrorState } from '@/components/ErrorState';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StatBar } from '@/components/StatBar';
 import { TypeChip } from '@/components/TypeChip';
 import { usePokemon } from '@/hooks/usePokemon';
 import {
-  artworkUrl,
   formatHeightFeetInches,
   formatHeightMeters,
   formatName,
@@ -24,7 +23,7 @@ const MOVES_PREVIEW_COUNT = 8;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View className="mt-4 rounded-2xl border border-[#ECEEF6] bg-surface p-4">
+    <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
       <Text className="mb-2 text-sm font-bold text-ink">{title}</Text>
       {children}
     </View>
@@ -86,12 +85,12 @@ export default function DetailScreen() {
             </View>
           </View>
 
-          <Image
-            source={artworkUrl(data.id)}
+          <Artwork
+            id={data.id}
+            pokemon={data}
             alt={formatName(data.name)}
-            contentFit="contain"
-            transition={300}
             className="mt-2 h-56 w-full"
+            placeholderSize={120}
           />
 
           <SectionCard title="Base Stats">
@@ -120,9 +119,19 @@ export default function DetailScreen() {
           <SectionCard title={`Moves (${moves.length})`}>
             <View className="flex-row flex-wrap gap-1.5">
               {visibleMoves.map(({ move }) => (
-                <View key={move.name} className="rounded-full bg-track px-3 py-1">
+                <Pressable
+                  key={move.name}
+                  onPress={() =>
+                    router.push({ pathname: '/move/[name]', params: { name: move.name } })
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={`${formatName(move.name)} move`}
+                  accessibilityHint="Opens move details"
+                  className="rounded-full bg-track px-3 py-1"
+                  style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
+                >
                   <Text className="text-xs text-ink-muted">{formatName(move.name)}</Text>
-                </View>
+                </Pressable>
               ))}
             </View>
             {moves.length > MOVES_PREVIEW_COUNT ? (

@@ -49,6 +49,17 @@ export function artworkUrl(id: number): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
 
+/** Small default sprite, the fallback for forms without official artwork. */
+export function spriteUrl(id: number): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+}
+
+/** Fills PokeAPI's `$effect_chance` placeholder in move effect text. */
+export function formatEffectText(text: string, effectChance: number | null): string {
+  if (effectChance === null) return text;
+  return text.replace(/\$effect_chance/g, String(effectChance));
+}
+
 const STAT_LABELS: Record<string, string> = {
   hp: 'HP',
   attack: 'Attack',

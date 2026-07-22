@@ -1,4 +1,4 @@
-import { ApiError, getPokemon, getPokemonPage } from '../pokeapi';
+import { ApiError, getMove, getPokemon, getPokemonPage } from '../pokeapi';
 
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
@@ -78,5 +78,24 @@ describe('getPokemon', () => {
 
     await expect(getPokemon('pikachu')).rejects.toBeInstanceOf(ApiError);
     await expect(getPokemon('pikachu')).rejects.toThrow(/check your connection/i);
+  });
+});
+
+describe('getMove', () => {
+  it('normalizes the name before requesting', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 22, name: 'vine-whip' }));
+
+    await getMove(' Vine-Whip ');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://pokeapi.co/api/v2/move/vine-whip',
+      expect.anything(),
+    );
+  });
+
+  it('throws a move-specific ApiError on 404', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
+
+    await expect(getMove('no-such-move')).rejects.toThrow('Move not found.');
   });
 });

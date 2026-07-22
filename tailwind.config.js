@@ -5,21 +5,23 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Brand blue is shared by both color schemes (header, splash).
         brand: {
           DEFAULT: '#2D50C8',
           dark: '#22409F',
           light: '#4A6AE0',
         },
-        bg: '#F6F7FC',
-        surface: '#FFFFFF',
+        // Scheme-dependent tokens live in src/global.css as CSS variables.
+        bg: 'var(--color-bg)',
+        surface: 'var(--color-surface)',
         ink: {
-          DEFAULT: '#1B2137',
-          muted: '#6A7190',
-          subtle: '#9AA0B5',
+          DEFAULT: 'var(--color-ink)',
+          muted: 'var(--color-ink-muted)',
+          subtle: 'var(--color-ink-subtle)',
         },
-        track: '#EEF0F7',
+        track: 'var(--color-track)',
+        line: 'var(--color-line)',
       },
     },
   },
-  plugins: [],
 };

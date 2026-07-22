@@ -1,11 +1,12 @@
-import { MD3LightTheme, type MD3Theme } from 'react-native-paper';
+import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
 
 /**
- * Central design tokens. Keep in sync with the color palette in
- * `tailwind.config.js`. Paper components read from this theme, everything
- * else is styled with NativeWind classes.
+ * Central design tokens, one palette per color scheme. Keep in sync with the
+ * CSS variables in `src/global.css` (NativeWind classes) and the palette in
+ * `tailwind.config.js`. Paper components read from the matching MD3 theme,
+ * everything else is styled with NativeWind classes.
  */
-export const colors = {
+export const lightColors = {
   brand: '#2D50C8',
   brandDark: '#22409F',
   brandLight: '#4A6AE0',
@@ -15,23 +16,57 @@ export const colors = {
   inkMuted: '#6A7190',
   inkSubtle: '#9AA0B5',
   track: '#EEF0F7',
+  line: '#ECEEF6',
   danger: '#D9484A',
 } as const;
 
-export const paperTheme: MD3Theme = {
+export const darkColors = {
+  brand: '#2D50C8',
+  brandDark: '#22409F',
+  brandLight: '#4A6AE0',
+  bg: '#0E1118',
+  surface: '#171B26',
+  ink: '#E7EAF3',
+  inkMuted: '#9AA2BC',
+  inkSubtle: '#6C7490',
+  track: '#232939',
+  line: '#252B3B',
+  danger: '#F2706F',
+} as const;
+
+export const paperLightTheme: MD3Theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: colors.brand,
+    primary: lightColors.brand,
     onPrimary: '#FFFFFF',
     primaryContainer: '#DDE4FB',
-    onPrimaryContainer: colors.brandDark,
-    background: colors.bg,
-    surface: colors.surface,
-    onSurface: colors.ink,
-    surfaceVariant: colors.track,
-    onSurfaceVariant: colors.inkMuted,
+    onPrimaryContainer: lightColors.brandDark,
+    background: lightColors.bg,
+    surface: lightColors.surface,
+    onSurface: lightColors.ink,
+    surfaceVariant: lightColors.track,
+    onSurfaceVariant: lightColors.inkMuted,
     outline: '#D8DCEA',
-    error: colors.danger,
+    error: lightColors.danger,
+  },
+};
+
+export const paperDarkTheme: MD3Theme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    // Brand blue is too dark for text on dark surfaces; use a lighter tint.
+    primary: '#9FB2F5',
+    onPrimary: '#101736',
+    primaryContainer: darkColors.brandDark,
+    onPrimaryContainer: '#DDE4FB',
+    background: darkColors.bg,
+    surface: darkColors.surface,
+    onSurface: darkColors.ink,
+    surfaceVariant: darkColors.track,
+    onSurfaceVariant: darkColors.inkMuted,
+    outline: '#3A4158',
+    error: darkColors.danger,
   },
 };

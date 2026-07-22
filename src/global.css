@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Semantic color tokens. Tailwind classes (bg-bg, text-ink, border-line, etc.)
+ * resolve through these variables, so dark mode needs no per-component work.
+ * Keep in sync with lightColors/darkColors in src/theme/paperTheme.ts.
+ */
+:root {
+  --color-bg: #f6f7fc;
+  --color-surface: #ffffff;
+  --color-ink: #1b2137;
+  --color-ink-muted: #6a7190;
+  --color-ink-subtle: #9aa0b5;
+  --color-track: #eef0f7;
+  --color-line: #eceef6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0e1118;
+    --color-surface: #171b26;
+    --color-ink: #e7eaf3;
+    --color-ink-muted: #9aa2bc;
+    --color-ink-subtle: #6c7490;
+    --color-track: #232939;
+    --color-line: #252b3b;
+  }
+}

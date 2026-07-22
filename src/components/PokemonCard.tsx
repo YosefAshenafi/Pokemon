@@ -1,10 +1,10 @@
-import { Image } from 'expo-image';
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { usePokemon } from '@/hooks/usePokemon';
-import { artworkUrl, formatName, formatPokemonId } from '@/utils/format';
+import { formatName, formatPokemonId } from '@/utils/format';
 
+import { Artwork } from './Artwork';
 import { TypeChip } from './TypeChip';
 
 interface PokemonCardProps {
@@ -27,7 +27,7 @@ export const PokemonCard = memo(function PokemonCard({ id, name, onPress }: Poke
       accessibilityRole="button"
       accessibilityLabel={`${formatName(name)}, ${formatPokemonId(id)}`}
       accessibilityHint="Opens details"
-      className="mb-3 w-[48%] rounded-2xl border border-[#ECEEF6] bg-surface p-3"
+      className="mb-3 w-[48%] rounded-2xl border border-line bg-surface p-3"
       style={({ pressed }) => (pressed ? { opacity: 0.85, transform: [{ scale: 0.98 }] } : undefined)}
     >
       <View className="flex-row items-center justify-between gap-1">
@@ -39,12 +39,12 @@ export const PokemonCard = memo(function PokemonCard({ id, name, onPress }: Poke
         </Text>
       </View>
 
-      <Image
-        source={artworkUrl(id)}
+      <Artwork
+        id={id}
+        pokemon={data}
         alt={formatName(name)}
-        contentFit="contain"
-        transition={200}
         className="mt-2 h-24 w-full"
+        placeholderSize={56}
       />
 
       <View className="mt-2 min-h-[22px] flex-row flex-wrap gap-1.5">

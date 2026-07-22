@@ -47,6 +47,26 @@ export interface Pokemon {
   sprites: PokemonSprites;
 }
 
+export interface MoveEffectEntry {
+  effect: string;
+  short_effect: string;
+  language: NamedAPIResource;
+}
+
+export interface Move {
+  id: number;
+  name: string;
+  /** Percentage, or null for moves that never miss. */
+  accuracy: number | null;
+  /** Null for status moves without direct damage. */
+  power: number | null;
+  pp: number | null;
+  effect_chance: number | null;
+  type: NamedAPIResource;
+  damage_class: NamedAPIResource | null;
+  effect_entries: MoveEffectEntry[];
+}
+
 /** Lightweight list entry with the id already extracted from the resource URL. */
 export interface PokemonSummary {
   id: number;
