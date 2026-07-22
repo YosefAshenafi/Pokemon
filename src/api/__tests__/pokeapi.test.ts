@@ -1,15 +1,15 @@
 import { ApiError, getPokemon, getPokemonPage } from '../pokeapi';
 
 const mockFetch = jest.fn();
-const originalFetch = global.fetch;
+const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
   mockFetch.mockReset();
-  global.fetch = mockFetch as unknown as typeof fetch;
+  globalThis.fetch = mockFetch as unknown as typeof fetch;
 });
 
 afterAll(() => {
-  global.fetch = originalFetch;
+  globalThis.fetch = originalFetch;
 });
 
 function jsonResponse(body: unknown, status = 200) {
