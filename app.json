@@ -7,7 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "pokedex",
     "userInterfaceStyle": "light",
-    "ios": {},
+    "ios": {
+      "bundleIdentifier": "com.jossyfreelancer.pokedex"
+    },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
