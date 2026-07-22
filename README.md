@@ -4,6 +4,12 @@ A simple Pokémon mobile app built with **Expo** for the Senior Developer Assess
 
 **Project type:** mobile app (Expo / React Native) — runs on iOS, Android, or the Expo Go client. No backend of its own, no authentication required.
 
+## Screenshots
+
+| List & search | Detail |
+|:---:|:---:|
+| <img src="docs/screenshots/list.png" alt="List screen with search bar and Pokémon card grid" width="340" /> | <img src="docs/screenshots/detail.png" alt="Bulbasaur detail screen with stats, breeding info and moves" width="340" /> |
+
 ## Features
 
 - **List screen** — 2-column card grid (artwork, name, Pokédex number, type chips) with infinite scroll and pull-to-refresh
