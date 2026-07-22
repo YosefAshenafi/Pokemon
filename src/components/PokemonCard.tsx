@@ -15,8 +15,8 @@ interface PokemonCardProps {
 
 /**
  * Grid card for the list screen. Fetches the Pokémon's detail for its type
- * chips — the same cached query the detail screen uses, so tapping a card
- * that has finished loading opens the detail screen instantly.
+ * chips through the same cached query the detail screen uses, so tapping a
+ * card that has finished loading opens the detail screen instantly.
  */
 export const PokemonCard = memo(function PokemonCard({ id, name, onPress }: PokemonCardProps) {
   const { data } = usePokemon(name);

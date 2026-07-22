@@ -1,4 +1,4 @@
-/** Minimal PokeAPI shapes — only the fields this app consumes. */
+/** Minimal PokeAPI shapes, limited to the fields this app consumes. */
 
 export interface NamedAPIResource {
   name: string;

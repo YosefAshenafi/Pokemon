@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Animated, Easing, useAnimatedValue, type ViewProps } from 'react-native';
 
-/** Gently pulses its children — used by skeleton placeholders. */
+/** Gently pulses its children. Used by skeleton placeholders. */
 export function Pulse({ style, children, ...rest }: ViewProps) {
   const opacity = useAnimatedValue(1);
 

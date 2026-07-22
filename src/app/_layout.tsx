@@ -14,8 +14,8 @@ import { colors, paperTheme } from '@/theme/paperTheme';
 // components must be registered explicitly.
 cssInterop(Image, { className: 'style' });
 
-// Paper resolves icons from react-native-vector-icons, which isn't installed —
-// point it at Expo's bundled MaterialCommunityIcons instead.
+// Paper resolves icons from react-native-vector-icons, which isn't installed.
+// Point it at Expo's bundled MaterialCommunityIcons instead.
 const paperSettings = {
   icon: (props: React.ComponentProps<typeof MaterialCommunityIcons>) => (
     <MaterialCommunityIcons {...props} />

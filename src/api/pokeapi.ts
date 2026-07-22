@@ -63,7 +63,7 @@ export function getPokemon(nameOrId: string | number): Promise<Pokemon> {
 
 /**
  * The complete name index (~1300 entries, a few KB) used for client-side
- * search — PokeAPI has no substring-search endpoint.
+ * search, since PokeAPI has no substring-search endpoint.
  */
 export async function getAllPokemonNames(): Promise<PokemonSummary[]> {
   const data = await fetchJson<PokemonListResponse>('/pokemon?offset=0&limit=100000');

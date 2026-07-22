@@ -28,7 +28,7 @@ export function typeColor(type: string): string {
 
 /**
  * Picks a readable text color for a given background so light chips
- * (electric, ice, ground…) don't end up with unreadable white text.
+ * (electric, ice, ground, etc.) don't end up with unreadable white text.
  */
 export function textColorOn(background: string): string {
   const hex = background.replace('#', '');

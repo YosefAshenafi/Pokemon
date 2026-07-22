@@ -2,7 +2,7 @@ import { MD3LightTheme, type MD3Theme } from 'react-native-paper';
 
 /**
  * Central design tokens. Keep in sync with the color palette in
- * `tailwind.config.js` — Paper components read from this theme, everything
+ * `tailwind.config.js`. Paper components read from this theme, everything
  * else is styled with NativeWind classes.
  */
 export const colors = {
