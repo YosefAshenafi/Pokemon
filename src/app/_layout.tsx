@@ -2,15 +2,14 @@ import '../global.css';
 
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { experimental_createQueryPersister } from '@tanstack/query-persist-client-core';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { cssInterop } from 'nativewind';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 
@@ -31,20 +30,25 @@ const paperSettings = {
 
 const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
+// Per-query persistence: each query is stored under its own AsyncStorage key
+// (`tanstack-query-<hash>`) instead of one giant blob. This avoids Android's ~2 MB
+// SQLite CursorWindow per-row limit, which the single-key persister blew past once
+// several 200 KB+ Pokemon detail responses were cached together.
+const persister = experimental_createQueryPersister({
+  storage: AsyncStorage,
+  maxAge: CACHE_MAX_AGE,
+  buster: 'v1',
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       gcTime: CACHE_MAX_AGE,
       retry: 2,
+      persister: persister.persisterFn,
     },
   },
-});
-
-const persister = createAsyncStoragePersister({
-  storage: AsyncStorage,
-  key: 'pokedex-query-cache',
-  throttleTime: 2000,
 });
 
 export default function RootLayout() {
@@ -52,11 +56,12 @@ export default function RootLayout() {
   const colors = isDark ? darkColors : lightColors;
   const [splashVisible, setSplashVisible] = useState(true);
 
+  useEffect(() => {
+    AsyncStorage.removeItem('pokedex-query-cache').catch(() => {});
+  }, []);
+
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{ persister, maxAge: CACHE_MAX_AGE, buster: 'v1' }}
-    >
+    <QueryClientProvider client={queryClient}>
       <PaperProvider theme={isDark ? paperDarkTheme : paperLightTheme} settings={paperSettings}>
         <StatusBar style={splashVisible && !isDark ? 'dark' : 'light'} />
         <Stack
@@ -67,6 +72,6 @@ export default function RootLayout() {
         />
         {splashVisible ? <AnimatedSplash onFinish={() => setSplashVisible(false)} /> : null}
       </PaperProvider>
-    </PersistQueryClientProvider>
+    </QueryClientProvider>
   );
 }
