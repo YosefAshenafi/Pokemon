@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { usePokemon } from '@/hooks/usePokemon';
 import { formatName, formatPokemonId } from '@/utils/format';
 
 import { Artwork } from './Artwork';
@@ -10,20 +9,20 @@ import { TypeChip } from './TypeChip';
 interface PokemonCardProps {
   id: number;
   name: string;
-  onPress: () => void;
+  /** Types from the shared type index; `undefined` while it is still loading. */
+  types?: string[];
+  onPress: (name: string) => void;
 }
 
 /**
- * Grid card for the list screen. Fetches the Pokémon's detail for its type
- * chips through the same cached query the detail screen uses, so tapping a
- * card that has finished loading opens the detail screen instantly.
+ * Grid card for the list screen. Purely presentational: artwork is derived from
+ * the id and types are passed in from the shared type index, so a card does no
+ * fetching of its own and stays cheap to render during fast infinite scroll.
  */
-export const PokemonCard = memo(function PokemonCard({ id, name, onPress }: PokemonCardProps) {
-  const { data } = usePokemon(name);
-
+export const PokemonCard = memo(function PokemonCard({ id, name, types, onPress }: PokemonCardProps) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => onPress(name)}
       accessibilityRole="button"
       accessibilityLabel={`${formatName(name)}, ${formatPokemonId(id)}`}
       accessibilityHint="Opens details"
@@ -39,17 +38,11 @@ export const PokemonCard = memo(function PokemonCard({ id, name, onPress }: Poke
         </Text>
       </View>
 
-      <Artwork
-        id={id}
-        pokemon={data}
-        alt={formatName(name)}
-        className="mt-2 h-24 w-full"
-        placeholderSize={56}
-      />
+      <Artwork id={id} alt={formatName(name)} className="mt-2 h-24 w-full" placeholderSize={56} />
 
       <View className="mt-2 min-h-[22px] flex-row flex-wrap gap-1.5">
-        {data
-          ? data.types.map(({ type }) => <TypeChip key={type.name} type={type.name} />)
+        {types
+          ? types.map((type) => <TypeChip key={type} type={type} />)
           : [0, 1].map((i) => <View key={i} className="h-[22px] w-14 rounded-full bg-track" />)}
       </View>
     </Pressable>

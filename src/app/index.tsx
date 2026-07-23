@@ -17,6 +17,7 @@ import { TypeFilterSheet } from '@/components/TypeFilterSheet';
 import { usePokemonByTypes } from '@/hooks/usePokemonByTypes';
 import { usePokemonList } from '@/hooks/usePokemonList';
 import { usePokemonSearch } from '@/hooks/usePokemonSearch';
+import { usePokemonTypeIndex } from '@/hooks/usePokemonTypeIndex';
 
 const SKELETON_COUNT = 8;
 
@@ -35,17 +36,19 @@ export default function ListScreen() {
   const list = usePokemonList();
   const search = usePokemonSearch(query);
   const typeList = usePokemonByTypes(activeTypes);
+  const typeIndex = usePokemonTypeIndex();
 
   const openDetail = useCallback(
     (name: string) => router.push({ pathname: '/pokemon/[name]', params: { name } }),
     [router],
   );
 
+  const typeMap = typeIndex.data;
   const renderItem = useCallback(
     ({ item }: { item: PokemonSummary }) => (
-      <PokemonCard id={item.id} name={item.name} onPress={() => openDetail(item.name)} />
+      <PokemonCard id={item.id} name={item.name} types={typeMap?.[item.name]} onPress={openDetail} />
     ),
-    [openDetail],
+    [openDetail, typeMap],
   );
 
   const onRefresh = useCallback(async () => {

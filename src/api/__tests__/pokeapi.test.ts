@@ -1,4 +1,11 @@
-import { ApiError, getMove, getPokemon, getPokemonByType, getPokemonPage } from '../pokeapi';
+import {
+  ApiError,
+  getMove,
+  getPokemon,
+  getPokemonByType,
+  getPokemonPage,
+  getPokemonTypeIndex,
+} from '../pokeapi';
 
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
@@ -108,6 +115,89 @@ describe('getPokemonByType', () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
 
     await expect(getPokemonByType('notatype')).rejects.toThrow('Type not found.');
+  });
+});
+
+describe('getPokemonTypeIndex', () => {
+  const byType: Record<string, { slot: number; pokemon: { name: string; url: string } }[]> = {
+    grass: [
+      { slot: 1, pokemon: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon/1/' } },
+      { slot: 2, pokemon: { name: 'foo', url: 'https://pokeapi.co/api/v2/pokemon/999/' } },
+    ],
+    poison: [
+      { slot: 2, pokemon: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon/1/' } },
+      { slot: 1, pokemon: { name: 'foo', url: 'https://pokeapi.co/api/v2/pokemon/999/' } },
+    ],
+    fire: [
+      { slot: 1, pokemon: { name: 'charmander', url: 'https://pokeapi.co/api/v2/pokemon/4/' } },
+    ],
+  };
+
+  function membersResponse(url: string) {
+    return jsonResponse({ pokemon: byType[url.split('/type/')[1]] ?? [] });
+  }
+
+  it('discovers the type set from the API and maps each Pokémon to its types in slot order', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.endsWith('/type')) {
+        return Promise.resolve(
+          jsonResponse({
+            results: [
+              { name: 'grass', url: '' },
+              { name: 'poison', url: '' },
+              { name: 'fire', url: '' },
+            ],
+          }),
+        );
+      }
+      return Promise.resolve(membersResponse(url));
+    });
+
+    const index = await getPokemonTypeIndex();
+
+    // The type set is discovered from the list endpoint, then each type is read.
+    expect(mockFetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/type', expect.anything());
+    expect(index.bulbasaur).toEqual(['grass', 'poison']);
+    // Sorted by slot, not by the order the types were fetched.
+    expect(index.foo).toEqual(['poison', 'grass']);
+    expect(index.charmander).toEqual(['fire']);
+  });
+
+  it('falls back to the built-in type list when the type lookup fails', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.endsWith('/type')) return Promise.resolve(jsonResponse({}, 500));
+      return Promise.resolve(membersResponse(url));
+    });
+
+    const index = await getPokemonTypeIndex();
+
+    // Tried discovery, then read each of the 18 built-in types (1 + 18 calls).
+    expect(mockFetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/type', expect.anything());
+    expect(mockFetch).toHaveBeenCalledTimes(19);
+    expect(index.bulbasaur).toEqual(['grass', 'poison']);
+  });
+
+  it('skips a failing type instead of failing the whole map', async () => {
+    mockFetch.mockImplementation((url: string) => {
+      if (url.endsWith('/type')) {
+        return Promise.resolve(
+          jsonResponse({
+            results: [
+              { name: 'grass', url: '' },
+              { name: 'poison', url: '' },
+            ],
+          }),
+        );
+      }
+      if (url.endsWith('/type/poison')) return Promise.reject(new TypeError('boom'));
+      return Promise.resolve(membersResponse(url));
+    });
+
+    const index = await getPokemonTypeIndex();
+
+    // Grass still resolves; the failed poison fetch just contributes nothing.
+    expect(index.bulbasaur).toEqual(['grass']);
+    expect(index.foo).toEqual(['grass']);
   });
 });
 

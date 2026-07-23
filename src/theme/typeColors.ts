@@ -1,5 +1,11 @@
-/** Canonical colors for the 18 Pokémon types, used for type chips and accents. */
-export const TYPE_COLORS: Record<string, string> = {
+import type { PokemonType } from '@/api/types';
+
+/**
+ * Color for each of the 18 Pokémon types, used for type chips and accents.
+ * Typed against `PokemonType`, so TypeScript enforces that every canonical type
+ * has a color and no stray keys creep in.
+ */
+export const TYPE_COLORS: Record<PokemonType, string> = {
   normal: '#A8A77A',
   fire: '#EE8130',
   water: '#6390F0',
@@ -23,7 +29,7 @@ export const TYPE_COLORS: Record<string, string> = {
 const FALLBACK_TYPE_COLOR = '#8A8FA3';
 
 export function typeColor(type: string): string {
-  return TYPE_COLORS[type.toLowerCase()] ?? FALLBACK_TYPE_COLOR;
+  return TYPE_COLORS[type.toLowerCase() as PokemonType] ?? FALLBACK_TYPE_COLOR;
 }
 
 /**

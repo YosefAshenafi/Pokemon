@@ -76,3 +76,17 @@ export interface PokemonSummary {
   id: number;
   name: string;
 }
+
+/**
+ * The 18 canonical Pokémon types, used as the built-in default: the type set is
+ * fetched from PokeAPI at runtime so a newly added type is picked up
+ * automatically, and this list is the fallback when that lookup is unavailable
+ * (offline / API hiccup). It also anchors the type-color map, whose keys are
+ * checked against it so colors and types can never drift.
+ */
+export const POKEMON_TYPES = [
+  'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',
+  'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
+] as const;
+
+export type PokemonType = (typeof POKEMON_TYPES)[number];
