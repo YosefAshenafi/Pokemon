@@ -12,7 +12,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#2D50C8",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon.png"
       },
       "predictiveBackGestureEnabled": false
@@ -26,9 +26,14 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#2D50C8",
+          "backgroundColor": "#F6F7FC",
           "image": "./assets/images/logo-mark.png",
-          "imageWidth": 140
+          "imageWidth": 140,
+          "dark": {
+            "backgroundColor": "#0E1118",
+            "image": "./assets/images/logo-mark.png",
+            "imageWidth": 140
+          }
         }
       ]
     ],
