@@ -12,18 +12,14 @@ export interface TypeFilterResult {
 }
 
 /**
- * Intersects the per-type query results: keeps only the Pokémon present in
- * EVERY selected type's list (National Dex order preserved from the first).
- * Defined at module scope so its reference is stable — React Query then only
- * re-runs it when the underlying query results change and structurally shares
- * the output, keeping `data` referentially stable across renders so the list
- * does not re-render needlessly.
+ * Keeps only the Pokémon present in EVERY selected type's list, in the first
+ * one's National Dex order. At module scope so its reference is stable, which
+ * is what lets React Query structurally share `data` across renders.
  */
 function combineTypeResults(results: UseQueryResult<TypeMember[], Error>[]): TypeFilterResult {
   let data: PokemonSummary[] = [];
   const lists = results.map((r) => r.data).filter((l): l is TypeMember[] => l !== undefined);
-  // Only intersect once every selected type has loaded, so partial results
-  // never leak through as matches.
+  // Wait for every type, so partial results never leak through as matches.
   if (results.length > 0 && lists.length === results.length) {
     const [first, ...rest] = lists;
     const otherIdSets = rest.map((list) => new Set(list.map((p) => p.id)));
@@ -38,13 +34,9 @@ function combineTypeResults(results: UseQueryResult<TypeMember[], Error>[]): Typ
 }
 
 /**
- * Pokémon that belong to ALL of the given types (their intersection), backing
- * the multi-select type filter. Each type is fetched and cached independently,
- * then intersected — so two types return the dual-type Pokémon that have both.
- * An empty selection yields an empty, non-loading result.
- *
- * These are the same cache entries the type index builds from, so a type is
- * only ever downloaded once per session no matter which feature asks first.
+ * Pokémon belonging to ALL of the given types, backing the multi-select filter.
+ * An empty selection yields an empty, non-loading result. These are the same
+ * cache entries the type index builds from, so a type is downloaded once.
  */
 export function usePokemonByTypes(types: string[]): TypeFilterResult {
   return useQueries({

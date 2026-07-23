@@ -4,15 +4,10 @@ import { buildPokemonTypeIndex, getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
 
 /**
- * A `name -> types` map for the whole Pokédex, built once from the 18 type
- * endpoints. List cards read their type chips from this instead of each fetching
- * a full Pokémon detail, so scrolling stays fast no matter how deep it goes.
- *
- * Each type is loaded through `ensureQueryData` under the same key the type
- * filter uses, so the two features share one request per type rather than
- * downloading every roster twice. Partial results are published as batches land
- * so chips appear progressively; if every type fails the query errors (and so
- * caches nothing) and the list screen's pull-to-refresh retries it.
+ * A `name -> types` map for the whole Pokédex, read by the list cards instead
+ * of each fetching a full Pokémon detail. Types load through `ensureQueryData`
+ * under the same keys the type filter uses, so the two share one request per
+ * type, and batches are published as they land so chips appear progressively.
  */
 export function usePokemonTypeIndex() {
   const queryClient = useQueryClient();

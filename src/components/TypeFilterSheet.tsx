@@ -35,10 +35,8 @@ export function TypeFilterSheet({
   const hasSelection = activeTypes.length > 0;
   const queryClient = useQueryClient();
 
-  // Warm the cache for every type as soon as the sheet opens, so tapping a type
-  // filters instantly instead of waiting on its first network fetch. Cached
-  // types (staleTime: Infinity) are skipped — and the type index has usually
-  // already filled these same keys — so this rarely hits the network at all.
+  // Warm every type when the sheet opens so tapping one filters instantly. The
+  // type index has usually filled these keys already, so this rarely fetches.
   useEffect(() => {
     if (!visible) return;
     for (const type of POKEMON_TYPES) {
@@ -55,8 +53,7 @@ export function TypeFilterSheet({
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        // Override Paper's safe-area marginBottom so the sheet sits flush to the
-        // bottom edge; the inset is handled by paddingBottom instead.
+        // Drop Paper's safe-area marginBottom; paddingBottom handles the inset.
         style={{ justifyContent: 'flex-end', marginBottom: 0 }}
         contentContainerStyle={{
           backgroundColor: colors.surface,

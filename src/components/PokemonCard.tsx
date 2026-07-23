@@ -9,20 +9,15 @@ import { TypeChip } from './TypeChip';
 interface PokemonCardProps {
   id: number;
   name: string;
-  /**
-   * Types from the shared type index: `undefined` while it is still building
-   * (placeholder chips), `[]` once it has settled with nothing for this Pokémon.
-   */
+  /** `undefined` while the type index is still building, `[]` once it settled. */
   types?: string[];
   onPress: (name: string) => void;
-  /** Called on press-in so the screen can warm this Pokémon's detail cache. */
   onPressIn?: (name: string) => void;
 }
 
 /**
- * Grid card for the list screen. Purely presentational: artwork is derived from
- * the id and types are passed in from the shared type index, so a card does no
- * fetching of its own and stays cheap to render during fast infinite scroll.
+ * Grid card for the list screen. Purely presentational — artwork comes from the
+ * id and types are passed in — so it stays cheap to render during fast scroll.
  */
 export const PokemonCard = memo(function PokemonCard({
   id,

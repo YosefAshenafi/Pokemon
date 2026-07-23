@@ -7,17 +7,14 @@ import { darkColors, lightColors } from '@/theme/paperTheme';
 
 const LOGO_SIZE = 140;
 const SPIN_MS = 1100; // one full rotation
-const MIN_VISIBLE_MS = 1400; // keep spinning at least this long before fading
+const MIN_VISIBLE_MS = 1400;
 const FADE_MS = 350;
 
 interface AnimatedSplashProps {
   onFinish: () => void;
 }
 
-/**
- * Full-screen splash overlay that spins the pokéball logo,
- * then fades into the app.
- */
+/** Full-screen splash that spins the pokéball logo, then fades into the app. */
 export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   const isDark = useColorScheme() === 'dark';
   const backgroundColor = isDark ? darkColors.bg : lightColors.bg;

@@ -47,10 +47,8 @@ export default function ListScreen() {
     [router],
   );
 
-  // Cards no longer fetch details for their chips, so nothing else warms the
-  // detail cache. Doing it on press-in gives the request a head start on the
-  // navigation animation, without the N+1 that prefetching every visible card
-  // would bring back.
+  // Press-in gives the detail request a head start on the navigation animation,
+  // without the N+1 that prefetching every visible card would bring back.
   const prefetchDetail = useCallback(
     (name: string) => {
       queryClient.prefetchQuery({
@@ -69,9 +67,9 @@ export default function ListScreen() {
       <PokemonCard
         id={item.id}
         name={item.name}
-        // The index arrives in batches, so a missing name means "not loaded
-        // yet" while it is still fetching and "has no chips to show" after it
-        // settles — otherwise a failed index would leave placeholders forever.
+        // The index arrives in batches, so a missing name means "not loaded yet"
+        // only while it is fetching; after that it means "no chips to show",
+        // otherwise a failed index would leave placeholders forever.
         types={typeMap?.[item.name] ?? (typeIndexPending ? undefined : [])}
         onPress={openDetail}
         onPressIn={prefetchDetail}
@@ -82,9 +80,8 @@ export default function ListScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // The type index is a separate query with staleTime: Infinity, so it never
-    // refetches on its own — pull-to-refresh is how a failed or partially
-    // failed index recovers. Types already cached are returned without a fetch.
+    // staleTime: Infinity means the index never refetches on its own, so this is
+    // how a failed or partially failed one recovers. Cached types don't refetch.
     await Promise.all([list.refetch(), typeIndex.refetch()]);
     setRefreshing(false);
   }, [list, typeIndex]);

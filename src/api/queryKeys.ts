@@ -1,8 +1,6 @@
 /**
- * Every React Query key used by the app, in one place. Keys are shared across
- * hooks, prefetches and the persistence allowlist, so defining them here keeps
- * those in agreement — a card's prefetch writes the key the detail screen reads,
- * and the type index reuses the same per-type entries the type filter fetches.
+ * Every React Query key in one place, so the hooks, the prefetches and the
+ * persistence allowlist below can't drift apart.
  */
 export const queryKeys = {
   list: ['pokemon', 'list'] as const,
@@ -15,9 +13,9 @@ export const queryKeys = {
 };
 
 /**
- * Key prefixes whose data is small and bounded enough to survive a restart.
- * Deliberately an allowlist: a newly added query is not persisted until it is
- * listed here, so an unbounded response can never silently fill up storage.
+ * Key prefixes small enough to survive a restart. An allowlist, not a denylist:
+ * a new query isn't persisted until it is listed here, so an unbounded response
+ * can never silently fill up storage.
  */
 const PERSISTED_KEY_PREFIXES: readonly (readonly unknown[])[] = [
   queryKeys.list,

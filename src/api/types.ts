@@ -1,6 +1,9 @@
-/** Minimal PokeAPI shapes, limited to the fields this app consumes. */
+/**
+ * Minimal PokeAPI shapes, limited to the fields this app consumes. Only the
+ * types a consumer names are exported; the nested field shapes stay local.
+ */
 
-export interface NamedAPIResource {
+interface NamedAPIResource {
   name: string;
   url: string;
 }
@@ -15,21 +18,7 @@ export interface TypeResponse {
   pokemon: { slot: number; pokemon: NamedAPIResource }[];
 }
 
-export interface PokemonTypeSlot {
-  slot: number;
-  type: NamedAPIResource;
-}
-
-export interface PokemonStat {
-  base_stat: number;
-  stat: NamedAPIResource;
-}
-
-export interface PokemonMove {
-  move: NamedAPIResource;
-}
-
-export interface PokemonSprites {
+interface PokemonSprites {
   front_default: string | null;
   other?: {
     'official-artwork'?: {
@@ -45,13 +34,13 @@ export interface Pokemon {
   height: number;
   /** Hectograms */
   weight: number;
-  types: PokemonTypeSlot[];
-  stats: PokemonStat[];
-  moves: PokemonMove[];
+  types: { slot: number; type: NamedAPIResource }[];
+  stats: { base_stat: number; stat: NamedAPIResource }[];
+  moves: { move: NamedAPIResource }[];
   sprites: PokemonSprites;
 }
 
-export interface MoveEffectEntry {
+interface MoveEffectEntry {
   effect: string;
   short_effect: string;
   language: NamedAPIResource;
@@ -77,18 +66,15 @@ export interface PokemonSummary {
   name: string;
 }
 
-/** A member of a type's roster, carrying which slot that type occupies for it. */
+/** A type's roster entry. `slot` is 1 for a primary type, 2 for a secondary. */
 export interface TypeMember extends PokemonSummary {
-  /** 1 for a Pokémon's primary type, 2 for its secondary type. */
   slot: number;
 }
 
 /**
- * The 18 canonical Pokémon types — the single source of truth for which types
- * the app fetches, filters on and colors. PokeAPI's `/type` endpoint also
- * returns non-battle entries (`unknown`, `shadow`, `stellar`) that have no color
- * and no members, so the set is pinned here instead of discovered at runtime:
- * every type in the app is one this list and the type-color map both know.
+ * The types the app fetches, filters on and colors. Pinned rather than read
+ * from `/type`, which also returns memberless non-battle entries (`unknown`,
+ * `shadow`, `stellar`) that no type-color map would cover.
  */
 export const POKEMON_TYPES = [
   'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',

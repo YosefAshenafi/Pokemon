@@ -5,11 +5,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          DEFAULT: "#2D50C8",
-          dark: "#22409F",
-          light: "#4A6AE0",
-        },
+        brand: "#2D50C8",
         bg: "var(--color-bg)",
         surface: "var(--color-surface)",
         ink: {

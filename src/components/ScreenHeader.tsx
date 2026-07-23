@@ -7,10 +7,7 @@ interface ScreenHeaderProps {
   children: ReactNode;
 }
 
-/**
- * Shared brand-blue header: safe-area aware, rounded bottom edge, with a
- * half-clipped pokéball logo watermark in the top-right corner.
- */
+/** Shared brand-blue header, with a clipped pokéball watermark top-right. */
 export function ScreenHeader({ children }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
 

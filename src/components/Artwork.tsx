@@ -19,9 +19,8 @@ interface ArtworkProps {
 const PLACEHOLDER_COLOR = 'rgba(154, 160, 181, 0.4)';
 
 /**
- * Pokémon artwork with graceful degradation. Some forms (mega/gmax variants
- * with ids above 10000) have no official artwork, so this tries the official
- * artwork first, then the small default sprite, then a pokéball placeholder.
+ * Pokémon artwork, falling back to the default sprite and then a pokéball —
+ * mega/gmax forms (ids above 10000) have no official artwork.
  */
 export function Artwork({ id, alt, className, pokemon, placeholderSize = 56 }: ArtworkProps) {
   const [failures, setFailures] = useState(0);
