@@ -1,6 +1,6 @@
 # Pokemon
 
-A simple Pokémon mobile app built with **Expo** for the Senior Developer Assessment. Browse the Pokédex, search by name, and open any Pokémon to see its stats, breeding info, and moves — all fetched live from [PokeAPI](https://pokeapi.co).
+A simple Pokémon mobile app built with **Expo** for the Senior Developer Assessment. Browse the Pokédex, search by name or number, filter by type, and open any Pokémon to see its stats, breeding info, and moves — all fetched live from [PokeAPI](https://pokeapi.co).
 
 **Project type:** mobile app (Expo / React Native) — runs on iOS, Android, or the Expo Go client. No backend of its own, no authentication required.
 
@@ -13,7 +13,7 @@ A simple Pokémon mobile app built with **Expo** for the Senior Developer Assess
 ## Features
 
 - **List screen** — 2-column card grid (artwork, name, Pokédex number, type chips) with infinite scroll and pull-to-refresh
-- **Search** — client-side search over the full Pokémon name index (PokeAPI has no substring-search endpoint); prefix matches rank first
+- **Search & filter** — client-side search over the full Pokémon index by name (prefix matches rank first) or Pokédex number, plus a type filter that intersects up to two types (Pokémon that have both)
 - **Detail screen** — base stats with color-coded bars, height/weight in metric and imperial, and the full move list behind a "See all" toggle
 - **Move details** — tap any move to see its type, damage class, power, accuracy, PP, and effect text
 - **Offline persistence** — the query cache is persisted to device storage, so everything already seen renders instantly on the next launch and stays browsable offline
@@ -52,7 +52,7 @@ Then:
 
 1. The list screen shows "Who are you looking for?" with a grid of Pokémon cards.
 2. Scroll to the bottom — the next page loads automatically.
-3. Type `pika` in the search bar — Pikachu and friends appear; tap a card.
+3. Type `pika` in the search bar — Pikachu and friends appear; tap a card. Typing a number like `25` finds Pokémon by Pokédex id.
 4. The detail screen shows stats, breeding info, and moves; tap a move to see its power, accuracy, PP, and effect. The back arrow returns each time.
 5. Switch the device to dark mode — every screen follows the system appearance.
 6. Airplane mode: everything you've already seen still renders from the persisted cache, and screens you haven't visited show the error state with a working **Try again**.
@@ -86,5 +86,5 @@ src/
 - **Server state over app state.** All remote data lives in React Query's cache; the only local state is UI state (search text, "show all moves"). Redux/Zustand would add indirection without benefit at this scope.
 - **Cards share the detail query.** The list endpoint doesn't include types, so each card fetches its Pokémon's detail through the *same cached query* the detail screen uses (`staleTime: Infinity` — base Pokémon data never changes mid-session). By the time a card is visible, its detail screen opens instantly from cache.
 - **Offline-friendly by construction.** The whole React Query cache is persisted to AsyncStorage (24h max age), so previously seen lists, details, and moves survive restarts and work without a connection; failed background refetches keep showing cached data.
-- **Search is client-side.** PokeAPI only supports exact-name lookup, so the full name index (~1300 entries, a few KB) is fetched once per session and filtered locally.
+- **Search is client-side.** PokeAPI only supports exact-name lookup, so the full index (~1300 entries, a few KB) is fetched once per session and filtered locally — by name, or by Pokédex number when the query is numeric.
 - **Design tokens in one place.** The palette lives as CSS variables (`src/global.css`) that flip with the system color scheme, mirrored by light/dark Paper MD3 themes (`src/theme/paperTheme.ts`) — dark mode required no per-component styling. Pokémon type colors include a luminance check so light chips (Electric, Ice…) get dark text in both schemes.

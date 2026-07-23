@@ -91,14 +91,12 @@ export default function ListScreen() {
   const showSkeletons = !isError && isLoading;
 
   const typesLabel = activeTypes.map(formatName).join(' & ');
-  // Tint the filter icon with the selected type's own color (the first, when
-  // several are picked — the chips below carry each individual color).
   const filterIconColor = activeTypes[0] ? typeColor(activeTypes[0]) : undefined;
   const emptyMessage =
     isSearching && isFiltering
       ? `No ${typesLabel} Pokémon match “${query.trim()}”.`
       : isSearching
-        ? `Nothing matches “${query.trim()}”. Try a different name.`
+        ? `Nothing matches “${query.trim()}”. Try a different name or number.`
         : 'No Pokémon have all of the selected types.';
 
   return (
@@ -110,8 +108,8 @@ export default function ListScreen() {
         <Searchbar
           value={query}
           onChangeText={setQuery}
-          placeholder="Search by name, e.g. Pikachu"
-          accessibilityLabel="Search Pokémon by name"
+          placeholder="e.g. Pikachu or 25"
+          accessibilityLabel="Search Pokémon by name or number"
           mode="bar"
           elevation={0}
           traileringIcon="tune-variant"
