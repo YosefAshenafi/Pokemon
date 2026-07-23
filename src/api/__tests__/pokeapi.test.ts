@@ -1,4 +1,4 @@
-import { ApiError, getMove, getPokemon, getPokemonPage } from '../pokeapi';
+import { ApiError, getMove, getPokemon, getPokemonByType, getPokemonPage } from '../pokeapi';
 
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
@@ -78,6 +78,36 @@ describe('getPokemon', () => {
 
     await expect(getPokemon('pikachu')).rejects.toBeInstanceOf(ApiError);
     await expect(getPokemon('pikachu')).rejects.toThrow(/check your connection/i);
+  });
+});
+
+describe('getPokemonByType', () => {
+  it('normalizes the type, maps members to summaries, and sorts by id', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        pokemon: [
+          { slot: 1, pokemon: { name: 'charizard', url: 'https://pokeapi.co/api/v2/pokemon/6/' } },
+          { slot: 1, pokemon: { name: 'charmander', url: 'https://pokeapi.co/api/v2/pokemon/4/' } },
+        ],
+      }),
+    );
+
+    const members = await getPokemonByType('  Fire ');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://pokeapi.co/api/v2/type/fire',
+      expect.anything(),
+    );
+    expect(members).toEqual([
+      { id: 4, name: 'charmander' },
+      { id: 6, name: 'charizard' },
+    ]);
+  });
+
+  it('throws a type-specific ApiError on 404', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
+
+    await expect(getPokemonByType('notatype')).rejects.toThrow('Type not found.');
   });
 });
 

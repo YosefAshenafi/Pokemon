@@ -1,6 +1,6 @@
 import { idFromUrl } from '@/utils/format';
 
-import type { Move, Pokemon, PokemonListResponse, PokemonSummary } from './types';
+import type { Move, Pokemon, PokemonListResponse, PokemonSummary, TypeResponse } from './types';
 
 export const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
 
@@ -57,6 +57,16 @@ export async function getPokemonPage(
 export function getPokemon(nameOrId: string | number): Promise<Pokemon> {
   const key = String(nameOrId).trim().toLowerCase();
   return fetchJson<Pokemon>(`/pokemon/${encodeURIComponent(key)}`);
+}
+
+/** All Pokémon that belong to a given type, in National Dex order. */
+export async function getPokemonByType(type: string): Promise<PokemonSummary[]> {
+  const key = type.trim().toLowerCase();
+  const data = await fetchJson<TypeResponse>(
+    `/type/${encodeURIComponent(key)}`,
+    'Type not found.',
+  );
+  return toSummaries(data.pokemon.map((entry) => entry.pokemon)).sort((a, b) => a.id - b.id);
 }
 
 /** Full detail for a single move by name or numeric id. */

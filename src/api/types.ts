@@ -11,6 +11,10 @@ export interface PokemonListResponse {
   results: NamedAPIResource[];
 }
 
+export interface TypeResponse {
+  pokemon: { slot: number; pokemon: NamedAPIResource }[];
+}
+
 export interface PokemonTypeSlot {
   slot: number;
   type: NamedAPIResource;
