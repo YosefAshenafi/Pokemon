@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { getAllPokemonNames } from "@/api/pokeapi";
+import { queryKeys } from "@/api/queryKeys";
 import type { PokemonSummary } from "@/api/types";
 
 const MAX_RESULTS = 60;
@@ -44,7 +45,7 @@ export function searchPokemonIndex(
  */
 export function usePokemonSearch(query: string) {
   const namesQuery = useQuery({
-    queryKey: ["pokemon", "names"],
+    queryKey: queryKeys.names,
     queryFn: getAllPokemonNames,
     staleTime: Infinity,
     enabled: query.trim().length > 0,

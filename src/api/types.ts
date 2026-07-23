@@ -77,12 +77,18 @@ export interface PokemonSummary {
   name: string;
 }
 
+/** A member of a type's roster, carrying which slot that type occupies for it. */
+export interface TypeMember extends PokemonSummary {
+  /** 1 for a Pokémon's primary type, 2 for its secondary type. */
+  slot: number;
+}
+
 /**
- * The 18 canonical Pokémon types, used as the built-in default: the type set is
- * fetched from PokeAPI at runtime so a newly added type is picked up
- * automatically, and this list is the fallback when that lookup is unavailable
- * (offline / API hiccup). It also anchors the type-color map, whose keys are
- * checked against it so colors and types can never drift.
+ * The 18 canonical Pokémon types — the single source of truth for which types
+ * the app fetches, filters on and colors. PokeAPI's `/type` endpoint also
+ * returns non-battle entries (`unknown`, `shadow`, `stellar`) that have no color
+ * and no members, so the set is pinned here instead of discovered at runtime:
+ * every type in the app is one this list and the type-color map both know.
  */
 export const POKEMON_TYPES = [
   'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',

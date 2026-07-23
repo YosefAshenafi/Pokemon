@@ -1,11 +1,12 @@
 import {
   ApiError,
+  buildPokemonTypeIndex,
   getMove,
   getPokemon,
   getPokemonByType,
   getPokemonPage,
-  getPokemonTypeIndex,
 } from '../pokeapi';
+import { POKEMON_TYPES, type TypeMember } from '../types';
 
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
@@ -89,11 +90,11 @@ describe('getPokemon', () => {
 });
 
 describe('getPokemonByType', () => {
-  it('normalizes the type, maps members to summaries, and sorts by id', async () => {
+  it('normalizes the type, keeps each member’s slot, and sorts by id', async () => {
     mockFetch.mockResolvedValueOnce(
       jsonResponse({
         pokemon: [
-          { slot: 1, pokemon: { name: 'charizard', url: 'https://pokeapi.co/api/v2/pokemon/6/' } },
+          { slot: 2, pokemon: { name: 'charizard', url: 'https://pokeapi.co/api/v2/pokemon/6/' } },
           { slot: 1, pokemon: { name: 'charmander', url: 'https://pokeapi.co/api/v2/pokemon/4/' } },
         ],
       }),
@@ -106,8 +107,8 @@ describe('getPokemonByType', () => {
       expect.anything(),
     );
     expect(members).toEqual([
-      { id: 4, name: 'charmander' },
-      { id: 6, name: 'charizard' },
+      { id: 4, name: 'charmander', slot: 1 },
+      { id: 6, name: 'charizard', slot: 2 },
     ]);
   });
 
@@ -118,86 +119,73 @@ describe('getPokemonByType', () => {
   });
 });
 
-describe('getPokemonTypeIndex', () => {
-  const byType: Record<string, { slot: number; pokemon: { name: string; url: string } }[]> = {
+describe('buildPokemonTypeIndex', () => {
+  const byType: Record<string, TypeMember[]> = {
     grass: [
-      { slot: 1, pokemon: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon/1/' } },
-      { slot: 2, pokemon: { name: 'foo', url: 'https://pokeapi.co/api/v2/pokemon/999/' } },
+      { id: 1, name: 'bulbasaur', slot: 1 },
+      { id: 999, name: 'foo', slot: 2 },
     ],
     poison: [
-      { slot: 2, pokemon: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon/1/' } },
-      { slot: 1, pokemon: { name: 'foo', url: 'https://pokeapi.co/api/v2/pokemon/999/' } },
+      { id: 1, name: 'bulbasaur', slot: 2 },
+      { id: 999, name: 'foo', slot: 1 },
     ],
-    fire: [
-      { slot: 1, pokemon: { name: 'charmander', url: 'https://pokeapi.co/api/v2/pokemon/4/' } },
-    ],
+    fire: [{ id: 4, name: 'charmander', slot: 1 }],
   };
 
-  function membersResponse(url: string) {
-    return jsonResponse({ pokemon: byType[url.split('/type/')[1]] ?? [] });
-  }
+  const loadType = (type: string) => Promise.resolve(byType[type] ?? []);
 
-  it('discovers the type set from the API and maps each Pokémon to its types in slot order', async () => {
-    mockFetch.mockImplementation((url: string) => {
-      if (url.endsWith('/type')) {
-        return Promise.resolve(
-          jsonResponse({
-            results: [
-              { name: 'grass', url: '' },
-              { name: 'poison', url: '' },
-              { name: 'fire', url: '' },
-            ],
-          }),
-        );
-      }
-      return Promise.resolve(membersResponse(url));
-    });
+  it('reads every canonical type once and maps each Pokémon to its types in slot order', async () => {
+    const loader = jest.fn(loadType);
 
-    const index = await getPokemonTypeIndex();
+    const index = await buildPokemonTypeIndex(loader);
 
-    // The type set is discovered from the list endpoint, then each type is read.
-    expect(mockFetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/type', expect.anything());
+    expect(loader).toHaveBeenCalledTimes(POKEMON_TYPES.length);
+    expect(loader.mock.calls.map(([type]) => type)).toEqual([...POKEMON_TYPES]);
     expect(index.bulbasaur).toEqual(['grass', 'poison']);
-    // Sorted by slot, not by the order the types were fetched.
+    // Sorted by slot, not by the order the types were loaded.
     expect(index.foo).toEqual(['poison', 'grass']);
     expect(index.charmander).toEqual(['fire']);
   });
 
-  it('falls back to the built-in type list when the type lookup fails', async () => {
-    mockFetch.mockImplementation((url: string) => {
-      if (url.endsWith('/type')) return Promise.resolve(jsonResponse({}, 500));
-      return Promise.resolve(membersResponse(url));
-    });
-
-    const index = await getPokemonTypeIndex();
-
-    // Tried discovery, then read each of the 18 built-in types (1 + 18 calls).
-    expect(mockFetch).toHaveBeenCalledWith('https://pokeapi.co/api/v2/type', expect.anything());
-    expect(mockFetch).toHaveBeenCalledTimes(19);
-    expect(index.bulbasaur).toEqual(['grass', 'poison']);
-  });
-
   it('skips a failing type instead of failing the whole map', async () => {
-    mockFetch.mockImplementation((url: string) => {
-      if (url.endsWith('/type')) {
-        return Promise.resolve(
-          jsonResponse({
-            results: [
-              { name: 'grass', url: '' },
-              { name: 'poison', url: '' },
-            ],
-          }),
-        );
-      }
-      if (url.endsWith('/type/poison')) return Promise.reject(new TypeError('boom'));
-      return Promise.resolve(membersResponse(url));
-    });
+    const index = await buildPokemonTypeIndex((type) =>
+      type === 'poison' ? Promise.reject(new TypeError('boom')) : loadType(type),
+    );
 
-    const index = await getPokemonTypeIndex();
-
-    // Grass still resolves; the failed poison fetch just contributes nothing.
+    // Grass still resolves; the failed poison load just contributes nothing.
     expect(index.bulbasaur).toEqual(['grass']);
     expect(index.foo).toEqual(['grass']);
+  });
+
+  it('rejects when every type fails, so an empty index is never cached', async () => {
+    await expect(
+      buildPokemonTypeIndex(() => Promise.reject(new TypeError('offline'))),
+    ).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it('reports the index built so far as batches land', async () => {
+    const onProgress = jest.fn();
+
+    const index = await buildPokemonTypeIndex(loadType, onProgress);
+
+    expect(onProgress).toHaveBeenCalled();
+    // Progress is only reported once there is real data, never as an empty map.
+    for (const [partial] of onProgress.mock.calls) {
+      expect(Object.keys(partial).length).toBeGreaterThan(0);
+    }
+    // Every partial is a subset of the finished index.
+    const [firstPartial] = onProgress.mock.calls[0];
+    for (const name of Object.keys(firstPartial)) {
+      expect(index[name]).toEqual(expect.arrayContaining(firstPartial[name]));
+    }
+  });
+
+  it('indexes a Pokémon whose name collides with an Object prototype member', async () => {
+    const index = await buildPokemonTypeIndex((type) =>
+      type === 'grass' ? Promise.resolve([{ id: 1, name: '__proto__', slot: 1 }]) : loadType(type),
+    );
+
+    expect(index['__proto__']).toEqual(['grass']);
   });
 });
 

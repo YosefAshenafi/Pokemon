@@ -1,7 +1,8 @@
 import { useQueries, type UseQueryResult } from '@tanstack/react-query';
 
 import { getPokemonByType } from '@/api/pokeapi';
-import type { PokemonSummary } from '@/api/types';
+import { queryKeys } from '@/api/queryKeys';
+import type { PokemonSummary, TypeMember } from '@/api/types';
 
 export interface TypeFilterResult {
   data: PokemonSummary[];
@@ -18,9 +19,9 @@ export interface TypeFilterResult {
  * the output, keeping `data` referentially stable across renders so the list
  * does not re-render needlessly.
  */
-function combineTypeResults(results: UseQueryResult<PokemonSummary[], Error>[]): TypeFilterResult {
+function combineTypeResults(results: UseQueryResult<TypeMember[], Error>[]): TypeFilterResult {
   let data: PokemonSummary[] = [];
-  const lists = results.map((r) => r.data).filter((l): l is PokemonSummary[] => l !== undefined);
+  const lists = results.map((r) => r.data).filter((l): l is TypeMember[] => l !== undefined);
   // Only intersect once every selected type has loaded, so partial results
   // never leak through as matches.
   if (results.length > 0 && lists.length === results.length) {
@@ -41,11 +42,14 @@ function combineTypeResults(results: UseQueryResult<PokemonSummary[], Error>[]):
  * the multi-select type filter. Each type is fetched and cached independently,
  * then intersected — so two types return the dual-type Pokémon that have both.
  * An empty selection yields an empty, non-loading result.
+ *
+ * These are the same cache entries the type index builds from, so a type is
+ * only ever downloaded once per session no matter which feature asks first.
  */
 export function usePokemonByTypes(types: string[]): TypeFilterResult {
   return useQueries({
     queries: types.map((type) => ({
-      queryKey: ['pokemon', 'type', type],
+      queryKey: queryKeys.type(type),
       queryFn: () => getPokemonByType(type),
       staleTime: Infinity,
     })),

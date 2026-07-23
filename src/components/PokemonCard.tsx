@@ -9,9 +9,14 @@ import { TypeChip } from './TypeChip';
 interface PokemonCardProps {
   id: number;
   name: string;
-  /** Types from the shared type index; `undefined` while it is still loading. */
+  /**
+   * Types from the shared type index: `undefined` while it is still building
+   * (placeholder chips), `[]` once it has settled with nothing for this Pokémon.
+   */
   types?: string[];
   onPress: (name: string) => void;
+  /** Called on press-in so the screen can warm this Pokémon's detail cache. */
+  onPressIn?: (name: string) => void;
 }
 
 /**
@@ -19,10 +24,17 @@ interface PokemonCardProps {
  * the id and types are passed in from the shared type index, so a card does no
  * fetching of its own and stays cheap to render during fast infinite scroll.
  */
-export const PokemonCard = memo(function PokemonCard({ id, name, types, onPress }: PokemonCardProps) {
+export const PokemonCard = memo(function PokemonCard({
+  id,
+  name,
+  types,
+  onPress,
+  onPressIn,
+}: PokemonCardProps) {
   return (
     <Pressable
       onPress={() => onPress(name)}
+      onPressIn={() => onPressIn?.(name)}
       accessibilityRole="button"
       accessibilityLabel={`${formatName(name)}, ${formatPokemonId(id)}`}
       accessibilityHint="Opens details"
@@ -43,7 +55,13 @@ export const PokemonCard = memo(function PokemonCard({ id, name, types, onPress 
       <View className="mt-2 min-h-[22px] flex-row flex-wrap gap-1.5">
         {types
           ? types.map((type) => <TypeChip key={type} type={type} />)
-          : [0, 1].map((i) => <View key={i} className="h-[22px] w-14 rounded-full bg-track" />)}
+          : [0, 1].map((i) => (
+              <View
+                key={i}
+                testID="type-chip-placeholder"
+                className="h-[22px] w-14 rounded-full bg-track"
+              />
+            ))}
       </View>
     </Pressable>
   );

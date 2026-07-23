@@ -52,10 +52,6 @@ export function Artwork({ id, alt, className, pokemon, placeholderSize = 56 }: A
       alt={alt}
       contentFit="contain"
       transition={200}
-      // Tie the image to its Pokémon so FlatList view recycling swaps sources
-      // cleanly instead of briefly showing the previous card's artwork.
-      recyclingKey={String(id)}
-      cachePolicy="memory-disk"
       className={className}
       onError={() => setFailures((count) => count + 1)}
     />

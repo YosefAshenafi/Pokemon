@@ -6,11 +6,11 @@ import { Modal, Portal } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getPokemonByType } from '@/api/pokeapi';
+import { queryKeys } from '@/api/queryKeys';
+import { POKEMON_TYPES } from '@/api/types';
 import { darkColors, lightColors } from '@/theme/paperTheme';
-import { TYPE_COLORS, textColorOn, typeColor } from '@/theme/typeColors';
+import { textColorOn, typeColor } from '@/theme/typeColors';
 import { formatName } from '@/utils/format';
-
-const TYPES = Object.keys(TYPE_COLORS);
 
 interface TypeFilterSheetProps {
   visible: boolean;
@@ -37,12 +37,13 @@ export function TypeFilterSheet({
 
   // Warm the cache for every type as soon as the sheet opens, so tapping a type
   // filters instantly instead of waiting on its first network fetch. Cached
-  // types (staleTime: Infinity) are skipped, so this only fetches once.
+  // types (staleTime: Infinity) are skipped — and the type index has usually
+  // already filled these same keys — so this rarely hits the network at all.
   useEffect(() => {
     if (!visible) return;
-    for (const type of TYPES) {
+    for (const type of POKEMON_TYPES) {
       queryClient.prefetchQuery({
-        queryKey: ['pokemon', 'type', type],
+        queryKey: queryKeys.type(type),
         queryFn: () => getPokemonByType(type),
         staleTime: Infinity,
       });
@@ -115,7 +116,7 @@ export function TypeFilterSheet({
         <View style={{ height: 1, backgroundColor: colors.line, marginBottom: 16 }} />
 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-          {TYPES.map((type) => {
+          {POKEMON_TYPES.map((type) => {
             const background = typeColor(type);
             const selected = activeTypes.includes(type);
             return (

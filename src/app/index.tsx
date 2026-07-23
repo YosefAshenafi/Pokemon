@@ -1,4 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, useColorScheme, View } from 'react-native';
@@ -8,6 +9,8 @@ import { darkColors, lightColors } from '@/theme/paperTheme';
 import { textColorOn, typeColor } from '@/theme/typeColors';
 import { formatName } from '@/utils/format';
 
+import { getPokemon } from '@/api/pokeapi';
+import { queryKeys } from '@/api/queryKeys';
 import type { PokemonSummary } from '@/api/types';
 import { ErrorState } from '@/components/ErrorState';
 import { PokemonCard } from '@/components/PokemonCard';
@@ -23,6 +26,7 @@ const SKELETON_COUNT = 8;
 
 export default function ListScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? darkColors : lightColors;
   const [query, setQuery] = useState('');
@@ -43,25 +47,54 @@ export default function ListScreen() {
     [router],
   );
 
+  // Cards no longer fetch details for their chips, so nothing else warms the
+  // detail cache. Doing it on press-in gives the request a head start on the
+  // navigation animation, without the N+1 that prefetching every visible card
+  // would bring back.
+  const prefetchDetail = useCallback(
+    (name: string) => {
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.detail(name),
+        queryFn: () => getPokemon(name),
+        staleTime: Infinity,
+      });
+    },
+    [queryClient],
+  );
+
   const typeMap = typeIndex.data;
+  const typeIndexPending = typeIndex.isFetching;
   const renderItem = useCallback(
     ({ item }: { item: PokemonSummary }) => (
-      <PokemonCard id={item.id} name={item.name} types={typeMap?.[item.name]} onPress={openDetail} />
+      <PokemonCard
+        id={item.id}
+        name={item.name}
+        // The index arrives in batches, so a missing name means "not loaded
+        // yet" while it is still fetching and "has no chips to show" after it
+        // settles — otherwise a failed index would leave placeholders forever.
+        types={typeMap?.[item.name] ?? (typeIndexPending ? undefined : [])}
+        onPress={openDetail}
+        onPressIn={prefetchDetail}
+      />
     ),
-    [openDetail, typeMap],
+    [openDetail, prefetchDetail, typeMap, typeIndexPending],
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await list.refetch();
+    // The type index is a separate query with staleTime: Infinity, so it never
+    // refetches on its own — pull-to-refresh is how a failed or partially
+    // failed index recovers. Types already cached are returned without a fetch.
+    await Promise.all([list.refetch(), typeIndex.refetch()]);
     setRefreshing(false);
-  }, [list]);
+  }, [list, typeIndex]);
 
   const handleRetry = useCallback(() => {
     if (isSearching) search.refetch();
     if (isFiltering) typeList.refetch();
     if (!isSearching && !isFiltering) list.refetch();
-  }, [isSearching, isFiltering, search, typeList, list]);
+    if (typeIndex.isError) typeIndex.refetch();
+  }, [isSearching, isFiltering, search, typeList, list, typeIndex]);
 
   const toggleType = useCallback((type: string) => {
     setActiveTypes((prev) =>
