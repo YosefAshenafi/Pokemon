@@ -6,8 +6,8 @@ A simple Pokémon mobile app built with **Expo** for the Senior Developer Assess
 
 ## Screenshots
 
-| List & search | Detail |
-|:---:|:---:|
+|                                                List & search                                                |                                                         Detail                                                          |
+| :---------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------: |
 | <img src="docs/screenshots/list.png" alt="List screen with search bar and Pokémon card grid" width="340" /> | <img src="docs/screenshots/detail.png" alt="Bulbasaur detail screen with stats, breeding info and moves" width="340" /> |
 
 ## Features
@@ -17,22 +17,43 @@ A simple Pokémon mobile app built with **Expo** for the Senior Developer Assess
 - **Detail screen**: base stats with color-coded bars, height/weight in metric and imperial, and the full move list behind a "See all" toggle
 - **Move details**: tap any move to see its type, damage class, power, accuracy, PP, and effect text
 - **Offline persistence**: the Pokédex list, name index and type data are persisted to device storage, so the app opens populated on the next launch and stays browsable offline
-- **Dark mode**: follows the system appearance; all colors resolve through semantic tokens, so both schemes share one component tree
+- **Dark mode**: follows the system appearance automatically; all colors resolve through semantic tokens, so both schemes share one component tree
 - **Artwork fallbacks**: forms without official artwork (mega/gmax variants) fall back to their default sprite, then to a pokéball placeholder
 - **Loading, error, and empty states** on every screen: skeleton cards that match the real card geometry, friendly error messages with a working **Try again**, and a "no results" state that names what was searched or filtered for
 - **Navigation**: file-based stack navigation with Expo Router (list → detail → move → back)
 
+## Assessment requirements
+
+Everything the brief asks for, and where it lives:
+
+| Requirement                                    | Status | Where                                                                                        |
+| ---------------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| Pokémon list screen                            | ✅     | [`src/app/index.tsx`](src/app/index.tsx)                                                     |
+| Pokémon detail screen                          | ✅     | [`src/app/pokemon/[name].tsx`](src/app/pokemon/[name].tsx) (plus a bonus move detail screen) |
+| Data fetched from the PokeAPI                  | ✅     | [`src/api/pokeapi.ts`](src/api/pokeapi.ts)                                                   |
+| Basic loading and error states                 | ✅     | Skeleton cards, spinners and a retryable `ErrorState` on every screen                        |
+| Navigation between screens                     | ✅     | Expo Router stack (`useRouter().push` / `.back`)                                             |
+| Expo                                           | ✅     | SDK 57, Expo Router                                                                          |
+| TypeScript                                     | ✅     | Strict mode across all `src/` files                                                          |
+| React Native Paper                             | ✅     | Searchbar, buttons, activity indicators, filter sheet, MD3 theme                             |
+| NativeWind                                     | ✅     | All layout/spacing/typography via Tailwind `className`                                       |
+| Scalable structure                             | ✅     | One-way layered `src/` (see [Architecture](#architecture))                                   |
+| State management                               | ✅     | Server state in TanStack React Query; only UI state is local                                 |
+| Clean, responsive UI                           | ✅     | Semantic design tokens, light/dark, skeleton/empty/error states                              |
+| Basic tests                                    | ✅     | 150 tests, 100% coverage (see [Tests](#tests))                                               |
+| Source in a git repository + README with setup | ✅     | This repo and this file                                                                      |
+
 ## Tech stack
 
-| Requirement | How it's used |
-|---|---|
-| Expo (SDK 57) | App platform + Expo Router for navigation |
-| TypeScript | Strict mode throughout |
-| React Native Paper | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme |
-| NativeWind (v4) | All layout/spacing/typography styling via Tailwind classes |
-| TanStack React Query | Server state: caching, infinite scroll pagination, prefetching, retries |
-| AsyncStorage persister | Persists the small, bounded queries across launches for offline use |
-| expo-image | Cached, fading artwork images |
+| Requirement            | How it's used                                                               |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Expo (SDK 57)          | App platform + Expo Router for navigation                                   |
+| TypeScript             | Strict mode throughout                                                      |
+| React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme |
+| NativeWind (v4)        | All layout/spacing/typography styling via Tailwind classes                  |
+| TanStack React Query   | Server state: caching, infinite scroll pagination, prefetching, retries     |
+| AsyncStorage persister | Persists the small, bounded queries across launches for offline use         |
+| expo-image             | Cached, fading artwork images                                               |
 
 ## Getting started
 
@@ -70,8 +91,8 @@ npm run lint           # ESLint
 ### Coverage
 
 | Statements | Branches | Functions | Lines |
-|---|---|---|---|
-| 100% | 100% | 100% | 100% |
+| ---------- | -------- | --------- | ----- |
+| 100%       | 100%     | 100%      | 100%  |
 
 Measured across every file in `src/` (`collectCoverageFrom` in `package.json`), not only the files the tests happen to import. `coverageThreshold` enforces 100% on all four metrics, so `npm test` fails if a single statement, branch or function goes uncovered. No `istanbul ignore` comments are used anywhere: every branch is reached by a real test.
 
