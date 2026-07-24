@@ -22,27 +22,6 @@ A simple Pokémon mobile app built with **Expo** for the Senior Developer Assess
 - **Loading, error, and empty states** on every screen: skeleton cards that match the real card geometry, friendly error messages with a working **Try again**, and a "no results" state that names what was searched or filtered for
 - **Navigation**: file-based stack navigation with Expo Router (list → detail → move → back)
 
-## Assessment requirements
-
-Everything the brief asks for, and where it lives:
-
-| Requirement                                    | Status | Where                                                                                        |
-| ---------------------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
-| Pokémon list screen                            | ✅     | [`src/app/index.tsx`](src/app/index.tsx)                                                     |
-| Pokémon detail screen                          | ✅     | [`src/app/pokemon/[name].tsx`](src/app/pokemon/[name].tsx) (plus a bonus move detail screen) |
-| Data fetched from the PokeAPI                  | ✅     | [`src/api/pokeapi.ts`](src/api/pokeapi.ts)                                                   |
-| Basic loading and error states                 | ✅     | Skeleton cards, spinners and a retryable `ErrorState` on every screen                        |
-| Navigation between screens                     | ✅     | Expo Router stack (`useRouter().push` / `.back`)                                             |
-| Expo                                           | ✅     | SDK 57, Expo Router                                                                          |
-| TypeScript                                     | ✅     | Strict mode across all `src/` files                                                          |
-| React Native Paper                             | ✅     | Searchbar, buttons, activity indicators, filter sheet, MD3 theme                             |
-| NativeWind                                     | ✅     | All layout/spacing/typography via Tailwind `className`                                       |
-| Scalable structure                             | ✅     | One-way layered `src/` (see [Architecture](#architecture))                                   |
-| State management                               | ✅     | Server state in TanStack React Query; only UI state is local                                 |
-| Clean, responsive UI                           | ✅     | Semantic design tokens, light/dark, skeleton/empty/error states                              |
-| Basic tests                                    | ✅     | 150 tests, 100% coverage (see [Tests](#tests))                                               |
-| Source in a git repository + README with setup | ✅     | This repo and this file                                                                      |
-
 ## Tech stack
 
 | Requirement            | How it's used                                                               |
