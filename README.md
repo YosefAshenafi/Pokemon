@@ -26,7 +26,7 @@ A simple Pokémon mobile app built with **Expo** for the Senior Developer Assess
 
 | Requirement            | How it's used                                                               |
 | ---------------------- | --------------------------------------------------------------------------- |
-| Expo (SDK 57)          | App platform + Expo Router for navigation                                   |
+| Expo (SDK 54)          | App platform + Expo Router for navigation                                   |
 | TypeScript             | Strict mode throughout                                                      |
 | React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme |
 | NativeWind (v4)        | All layout/spacing/typography styling via Tailwind classes                  |
@@ -47,6 +47,8 @@ Then:
 
 - press **i** to open the iOS simulator, **a** for the Android emulator, or
 - scan the QR code with **Expo Go** on a physical device (phone and computer must share a network).
+
+> The project targets **SDK 54** on purpose. A given Expo Go build runs one SDK, and the App Store hands older devices an older Expo Go — so targeting the newest SDK makes the QR code unscannable for anyone whose phone can't run the newest client. SDK 54 is the widest-compatibility choice; please don't bump it just because a newer SDK is out.
 
 ### Verify it works
 
