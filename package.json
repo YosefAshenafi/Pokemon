@@ -60,6 +60,8 @@
       "!src/**/__tests__/**",
       "!src/test/**"
     ],
+    "maxWorkers": "50%",
+    "slowTestThreshold": 10,
     "coverageThreshold": {
       "global": {
         "statements": 100,

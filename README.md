@@ -61,7 +61,7 @@ Then:
 ## Tests
 
 ```bash
-npm test               # 144 tests + coverage report (Jest + React Testing Library)
+npm test               # 145 tests + coverage report (Jest + React Testing Library)
 npm run test:watch     # watch mode, without coverage, for iterating
 npx tsc --noEmit       # type check
 npm run lint           # ESLint
@@ -83,10 +83,10 @@ Three native capabilities have no JavaScript implementation under Jest and are s
 
 | Suite | What it covers |
 |---|---|
-| `app/listScreen` | Grid rendering, progressive type chips, pagination and its stopping condition, pull-to-refresh, search by name/number/substring, single and multi-type filtering, chip removal, search+filter composition, empty states, list and index failures with working retries |
+| `app/listScreen`, `app/listSearchAndFilter` | Grid rendering, progressive type chips, pagination and its stopping condition, pull-to-refresh, search by name/number/substring, single and multi-type filtering, chip removal, search+filter composition, empty states, list and index failures with working retries |
 | `app/detailScreen` | Navigation from a card, press-in prefetch, stats, metric/imperial units, type chips, the 8-move preview and See all toggle, move navigation, back, artwork fallback, error and 404 states |
 | `app/moveScreen` | Name/type/damage class, power/accuracy/PP, em dashes for null fields, `$effect_chance` interpolation, non-English effect fallback, error and retry |
-| `app/appShell` | Splash hand-off, the one-time cache migration and its already-run branch, dark mode end to end |
+| `app/appShell`, `app/splashHandoff` | Splash overlay and its hand-off to the app, the one-time cache migration and its already-run branch, dark mode end to end |
 | `app/missingRouteParam` | Both detail screens mounted at a route with no `[name]` segment, exercising their missing-param guards |
 | `app/splashFailure` | The app still boots when the native splash screen rejects |
 | `api/pokeapi` | URL building and normalization, pagination, 404 vs. network errors, entries with unparseable resource URLs |

@@ -18,15 +18,12 @@ const splash = () =>
   screen.queryByTestId('animated-splash', { includeHiddenElements: true });
 
 describe('App shell', () => {
-  it('shows the animated splash and then reveals the app', async () => {
+  it('shows the animated splash over the app while it boots', async () => {
     renderApp();
 
     // The tree stays behind a blank gate until the cache migration resolves.
     await waitFor(() => expect(splash()).toBeTruthy(), SETTLE);
-
-    // The splash holds for 1400 ms and fades for 350 ms before handing over.
-    await waitFor(() => expect(splash()).toBeNull(), { timeout: 8000 });
-    expect(screen.getByText(/Who are you/)).toBeTruthy();
+    expect(await screen.findByText(/Who are you/, {}, SETTLE)).toBeTruthy();
   }, TIMEOUT);
 
   it('purges a legacy cache blob on first launch and records that it did', async () => {
