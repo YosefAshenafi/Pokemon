@@ -1,3 +1,9 @@
+import {
+  PAGE_SIZE,
+  POKEAPI_BASE_URL,
+  REQUEST_TIMEOUT_MS,
+  TYPE_FETCH_CONCURRENCY,
+} from '@/constants/api';
 import { idFromUrl } from '@/utils/format';
 
 import { POKEMON_TYPES } from './types';
@@ -9,16 +15,6 @@ import type {
   TypeMember,
   TypeResponse,
 } from './types';
-
-// HTTPS only. Kept as a constant so a plain-HTTP or attacker-controlled base can
-// never be introduced by a typo elsewhere in the client.
-const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
-
-const PAGE_SIZE = 24;
-
-// A hung socket must not pin a query in its loading state forever, so every
-// request is aborted after this long and surfaces as a normal, retryable error.
-const REQUEST_TIMEOUT_MS = 15000;
 
 export class ApiError extends Error {
   constructor(
@@ -110,9 +106,6 @@ export async function getPokemonByType(type: string): Promise<TypeMember[]> {
 
 /** A `name -> [type, ...]` map for the whole Pokédex, in slot order. */
 export type PokemonTypeIndex = Record<string, string[]>;
-
-// All 18 at once would peak memory and queue the list's next page behind them.
-const TYPE_FETCH_CONCURRENCY = 6;
 
 function toIndex(slotted: Map<string, { slot: number; type: string }[]>): PokemonTypeIndex {
   // Null-prototype, so an API name like `__proto__` can't hit an inherited key.

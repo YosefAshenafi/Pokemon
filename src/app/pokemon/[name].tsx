@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/ErrorState';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StatBar } from '@/components/StatBar';
 import { TypeChip } from '@/components/TypeChip';
+import { MOVES_PREVIEW_COUNT, SCREEN_BOTTOM_PADDING, SCREEN_PADDING } from '@/constants/ui';
 import { usePokemon } from '@/hooks/usePokemon';
 import {
   formatHeightFeetInches,
@@ -19,8 +20,6 @@ import {
   formatWeightKg,
   formatWeightLbs,
 } from '@/utils/format';
-
-const MOVES_PREVIEW_COUNT = 8;
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -65,7 +64,10 @@ export default function DetailScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+          contentContainerStyle={{
+            paddingHorizontal: SCREEN_PADDING,
+            paddingBottom: SCREEN_BOTTOM_PADDING,
+          }}
         >
           <View className="mt-5 flex-row items-start justify-between">
             <View className="flex-1 pr-3">

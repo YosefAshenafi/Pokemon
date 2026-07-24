@@ -5,6 +5,7 @@ import { ActivityIndicator, IconButton } from 'react-native-paper';
 import { ErrorState } from '@/components/ErrorState';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TypeChip } from '@/components/TypeChip';
+import { SCREEN_BOTTOM_PADDING, SCREEN_PADDING } from '@/constants/ui';
 import { useMove } from '@/hooks/useMove';
 import { formatEffectText, formatName } from '@/utils/format';
 
@@ -56,7 +57,10 @@ export default function MoveScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+          contentContainerStyle={{
+            paddingHorizontal: SCREEN_PADDING,
+            paddingBottom: SCREEN_BOTTOM_PADDING,
+          }}
         >
           <View className="mt-5 flex-row items-start justify-between">
             <View className="flex-1 pr-3">

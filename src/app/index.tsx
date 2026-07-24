@@ -1,252 +1,86 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, Text, useColorScheme, View } from 'react-native';
-import { ActivityIndicator, Searchbar } from 'react-native-paper';
+import { useCallback, useState } from 'react';
+import { View } from 'react-native';
 
-import { darkColors, lightColors } from '@/theme/paperTheme';
-import { textColorOn, typeColor } from '@/theme/typeColors';
-import { formatName } from '@/utils/format';
-
-import { getPokemon } from '@/api/pokeapi';
-import { queryKeys } from '@/api/queryKeys';
-import type { PokemonSummary } from '@/api/types';
+import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
-import { PokemonCard } from '@/components/PokemonCard';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import { SkeletonCard } from '@/components/SkeletonCard';
+import { PokemonGrid } from '@/components/PokemonGrid';
+import { SearchHeader } from '@/components/SearchHeader';
+import { SkeletonGrid } from '@/components/SkeletonGrid';
 import { TypeFilterSheet } from '@/components/TypeFilterSheet';
-import { usePokemonByTypes } from '@/hooks/usePokemonByTypes';
-import { usePokemonList } from '@/hooks/usePokemonList';
-import { usePokemonSearch } from '@/hooks/usePokemonSearch';
-import { usePokemonTypeIndex } from '@/hooks/usePokemonTypeIndex';
-
-const SKELETON_COUNT = 8;
+import { usePokedexBrowser } from '@/hooks/usePokedexBrowser';
+import { formatName } from '@/utils/format';
 
 export default function ListScreen() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const isDark = useColorScheme() === 'dark';
-  const colors = isDark ? darkColors : lightColors;
-  const [query, setQuery] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTypes, setActiveTypes] = useState<string[]>([]);
+  const dex = usePokedexBrowser();
   const [filterOpen, setFilterOpen] = useState(false);
-
-  const isSearching = query.trim().length > 0;
-  const isFiltering = activeTypes.length > 0;
-
-  const list = usePokemonList();
-  const search = usePokemonSearch(query);
-  const typeList = usePokemonByTypes(activeTypes);
-  const typeIndex = usePokemonTypeIndex();
 
   const openDetail = useCallback(
     (name: string) => router.push({ pathname: '/pokemon/[name]', params: { name } }),
     [router],
   );
 
-  // Press-in gives the detail request a head start on the navigation animation,
-  // without the N+1 that prefetching every visible card would bring back.
-  const prefetchDetail = useCallback(
-    (name: string) => {
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.detail(name),
-        queryFn: () => getPokemon(name),
-        staleTime: Infinity,
-      });
-    },
-    [queryClient],
-  );
-
-  const typeMap = typeIndex.data;
-  const typeIndexPending = typeIndex.isFetching;
-  const renderItem = useCallback(
-    ({ item }: { item: PokemonSummary }) => (
-      <PokemonCard
-        id={item.id}
-        name={item.name}
-        // The index arrives in batches, so a missing name means "not loaded yet"
-        // only while it is fetching; after that it means "no chips to show",
-        // otherwise a failed index would leave placeholders forever.
-        types={typeMap?.[item.name] ?? (typeIndexPending ? undefined : [])}
-        onPress={openDetail}
-        onPressIn={prefetchDetail}
-      />
-    ),
-    [openDetail, prefetchDetail, typeMap, typeIndexPending],
-  );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    // staleTime: Infinity means the index never refetches on its own, so this is
-    // how a failed or partially failed one recovers. Cached types don't refetch.
-    await Promise.all([list.refetch(), typeIndex.refetch()]);
-    setRefreshing(false);
-  }, [list, typeIndex]);
-
-  const handleRetry = useCallback(() => {
-    if (isSearching) search.refetch();
-    if (isFiltering) typeList.refetch();
-    if (!isSearching && !isFiltering) list.refetch();
-    if (typeIndex.isError) typeIndex.refetch();
-  }, [isSearching, isFiltering, search, typeList, list, typeIndex]);
-
-  const toggleType = useCallback((type: string) => {
-    setActiveTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
-    );
-  }, []);
-
-  // The visible list composes search and type: with both active, keep the name
-  // matches that also belong to one of the selected types; otherwise fall back
-  // to whichever single filter is on, then the paginated Pokédex.
-  const data = useMemo<PokemonSummary[]>(() => {
-    if (isSearching && isFiltering) {
-      const inTypes = new Set(typeList.data.map((p) => p.name));
-      return search.results.filter((p) => inTypes.has(p.name));
-    }
-    if (isSearching) return search.results;
-    if (isFiltering) return typeList.data;
-    return list.data ?? [];
-  }, [isSearching, isFiltering, search.results, typeList.data, list.data]);
-
-  const isError =
-    (isSearching && search.isError) ||
-    (isFiltering && typeList.isError) ||
-    (!isSearching && !isFiltering && list.isError);
-
-  const isLoading =
-    (isSearching && search.isLoading) ||
-    (isFiltering && typeList.isLoading) ||
-    (!isSearching && !isFiltering && list.isLoading);
-  const showSkeletons = !isError && isLoading;
-
-  const typesLabel = activeTypes.map(formatName).join(' & ');
-  const filterIconColor = activeTypes[0] ? typeColor(activeTypes[0]) : undefined;
-  const emptyMessage =
-    isSearching && isFiltering
-      ? `No ${typesLabel} Pokémon match “${query.trim()}”.`
-      : isSearching
-        ? `Nothing matches “${query.trim()}”. Try a different name or number.`
-        : 'No Pokémon have all of the selected types.';
-
   return (
     <View className="flex-1 bg-bg">
-      <ScreenHeader>
-        <Text className="w-64 text-[26px] font-bold leading-9 text-white">
-          Who are you{'\n'}looking for?
-        </Text>
-        <Searchbar
-          value={query}
-          onChangeText={setQuery}
-          placeholder="e.g. Pikachu or 25"
-          accessibilityLabel="Search Pokémon by name or number"
-          mode="bar"
-          elevation={0}
-          traileringIcon="tune-variant"
-          onTraileringIconPress={() => setFilterOpen(true)}
-          traileringIconColor={filterIconColor}
-          traileringIconAccessibilityLabel="Filter Pokémon by type"
-          style={{
-            marginTop: 16,
-            borderRadius: 28,
-            backgroundColor: colors.surface,
-          }}
-          inputStyle={{ fontSize: 14 }}
-        />
+      <SearchHeader
+        query={dex.query}
+        onQueryChange={dex.setQuery}
+        activeTypes={dex.activeTypes}
+        onRemoveType={dex.toggleType}
+        onOpenFilters={() => setFilterOpen(true)}
+      />
 
-        {isFiltering ? (
-          <View className="mt-3 flex-row flex-wrap gap-2">
-            {activeTypes.map((type) => (
-              <Pressable
-                key={type}
-                onPress={() => toggleType(type)}
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${formatName(type)} filter`}
-                className="flex-row items-center gap-1 rounded-full py-1 pl-3 pr-2"
-                style={{ backgroundColor: typeColor(type) }}
-              >
-                <Text
-                  className="text-[12px] font-semibold"
-                  style={{ color: textColorOn(typeColor(type)) }}
-                >
-                  {formatName(type)}
-                </Text>
-                <MaterialCommunityIcons
-                  name="close"
-                  size={15}
-                  color={textColorOn(typeColor(type))}
-                />
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-      </ScreenHeader>
-
-      {isError ? (
-        <ErrorState
-          message={
-            isSearching
-              ? 'The Pokémon index could not be loaded.'
-              : isFiltering
-                ? 'These types could not be loaded. Check your connection and try again.'
-                : 'The Pokédex could not be loaded. Check your connection and try again.'
-          }
-          onRetry={handleRetry}
-        />
-      ) : showSkeletons ? (
-        <View className="flex-row flex-wrap justify-between px-4 pt-4">
-          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
-            <SkeletonCard key={i} />
-          ))}
-        </View>
+      {dex.isError ? (
+        <ErrorState message={errorMessage(dex.isSearching, dex.isFiltering)} onRetry={dex.retry} />
+      ) : dex.isLoading ? (
+        <SkeletonGrid />
       ) : (
-        <FlatList
-          testID="pokemon-grid"
-          data={data}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.name}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
-          onEndReached={() => {
-            if (!isSearching && !isFiltering && list.hasNextPage && !list.isFetchingNextPage) {
-              list.fetchNextPage();
-            }
-          }}
-          onEndReachedThreshold={0.4}
-          refreshing={refreshing}
-          onRefresh={isSearching || isFiltering ? undefined : onRefresh}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          initialNumToRender={8}
-          maxToRenderPerBatch={8}
-          windowSize={7}
-          ListFooterComponent={
-            !isSearching && !isFiltering && list.isFetchingNextPage ? (
-              <ActivityIndicator style={{ paddingVertical: 16 }} accessibilityLabel="Loading more Pokémon" />
-            ) : null
-          }
-          ListEmptyComponent={
-            isSearching || isFiltering ? (
-              <View className="items-center px-8 pt-16">
-                <Text className="text-base font-semibold text-ink">No Pokémon found</Text>
-                <Text className="mt-1 text-center text-sm text-ink-muted">{emptyMessage}</Text>
-              </View>
-            ) : null
+        <PokemonGrid
+          data={dex.data}
+          typesByName={dex.typesByName}
+          typesPending={dex.typesPending}
+          onSelect={openDetail}
+          onPrefetch={dex.prefetchDetail}
+          onEndReached={dex.loadMore}
+          loadingMore={dex.isLoadingMore}
+          refreshing={dex.refreshing}
+          onRefresh={dex.isPaginated ? dex.refresh : undefined}
+          empty={
+            dex.isPaginated ? null : (
+              <EmptyState
+                title="No Pokémon found"
+                message={emptyMessage(dex.query, dex.activeTypes)}
+              />
+            )
           }
         />
       )}
 
       <TypeFilterSheet
         visible={filterOpen}
-        activeTypes={activeTypes}
-        onToggle={toggleType}
-        onClear={() => setActiveTypes([])}
+        activeTypes={dex.activeTypes}
+        onToggle={dex.toggleType}
+        onClear={dex.clearTypes}
         onDismiss={() => setFilterOpen(false)}
       />
     </View>
   );
+}
+
+/** Names the thing that failed, so a retry is an informed choice. */
+function errorMessage(isSearching: boolean, isFiltering: boolean): string {
+  if (isSearching) return 'The Pokémon index could not be loaded.';
+  if (isFiltering) return 'These types could not be loaded. Check your connection and try again.';
+  return 'The Pokédex could not be loaded. Check your connection and try again.';
+}
+
+/** Echoes what was actually searched or filtered for, rather than "no results". */
+function emptyMessage(query: string, activeTypes: string[]): string {
+  const term = query.trim();
+  const typesLabel = activeTypes.map(formatName).join(' & ');
+
+  if (term && typesLabel) return `No ${typesLabel} Pokémon match “${term}”.`;
+  if (term) return `Nothing matches “${term}”. Try a different name or number.`;
+  return 'No Pokémon have all of the selected types.';
 }

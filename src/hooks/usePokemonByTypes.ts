@@ -3,6 +3,7 @@ import { useQueries, type UseQueryResult } from '@tanstack/react-query';
 import { getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
 import type { PokemonSummary, TypeMember } from '@/api/types';
+import { STATIC_STALE_TIME } from '@/constants/cache';
 
 export interface TypeFilterResult {
   data: PokemonSummary[];
@@ -43,7 +44,7 @@ export function usePokemonByTypes(types: string[]): TypeFilterResult {
     queries: types.map((type) => ({
       queryKey: queryKeys.type(type),
       queryFn: () => getPokemonByType(type),
-      staleTime: Infinity,
+      staleTime: STATIC_STALE_TIME,
     })),
     combine: combineTypeResults,
   });

@@ -2,12 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { experimental_createQueryPersister } from '@tanstack/query-persist-client-core';
 import { QueryClient } from '@tanstack/react-query';
 
+import {
+  CACHE_BUSTER,
+  CACHE_MAX_AGE,
+  DEFAULT_STALE_TIME,
+  LEGACY_CACHE_KEY,
+  LEGACY_CACHE_KEY_PREFIX,
+  QUERY_RETRY_COUNT,
+} from '@/constants/cache';
+
 import { isPersistedQueryKey } from './queryKeys';
-
-export const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
-
-/** Bump the suffix if the persisted-cache shape changes and old rows must be purged. */
-export const CACHE_MIGRATION_KEY = 'cache-migrated-v2';
 
 /**
  * One AsyncStorage key per query rather than one giant blob, which would hit
@@ -19,7 +23,7 @@ export const CACHE_MIGRATION_KEY = 'cache-migrated-v2';
 export const persister = experimental_createQueryPersister({
   storage: AsyncStorage,
   maxAge: CACHE_MAX_AGE,
-  buster: 'v1',
+  buster: CACHE_BUSTER,
   filters: { predicate: (query) => isPersistedQueryKey(query.queryKey) },
 });
 
@@ -31,9 +35,9 @@ export const persister = experimental_createQueryPersister({
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: DEFAULT_STALE_TIME,
       gcTime: CACHE_MAX_AGE,
-      retry: 2,
+      retry: QUERY_RETRY_COUNT,
       persister: persister.persisterFn,
     },
   },
@@ -45,6 +49,8 @@ export const queryClient = new QueryClient({
  */
 export async function purgeLegacyCacheKeys(): Promise<void> {
   const keys = await AsyncStorage.getAllKeys();
-  const stale = keys.filter((k) => k === 'pokedex-query-cache' || k.startsWith('tanstack-query'));
+  const stale = keys.filter(
+    (k) => k === LEGACY_CACHE_KEY || k.startsWith(LEGACY_CACHE_KEY_PREFIX),
+  );
   if (stale.length) await AsyncStorage.multiRemove(stale);
 }

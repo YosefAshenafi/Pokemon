@@ -1,18 +1,17 @@
 import { Text, View } from 'react-native';
 
+import { STAT_BAR_MAX } from '@/constants/ui';
 import { statColor } from '@/theme/typeColors';
 
 interface StatBarProps {
   label: string;
   value: number;
-  /** Scale ceiling for the bar; 160 covers all but a handful of legendaries. */
+  /** Scale ceiling for the bar; defaults to `STAT_BAR_MAX`. */
   max?: number;
 }
 
-const DEFAULT_MAX = 160;
-
 /** Horizontal base-stat bar, colored by how strong the stat is. */
-export function StatBar({ label, value, max = DEFAULT_MAX }: StatBarProps) {
+export function StatBar({ label, value, max = STAT_BAR_MAX }: StatBarProps) {
   const percent = Math.min(value / max, 1) * 100;
 
   return (

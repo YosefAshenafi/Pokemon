@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { buildPokemonTypeIndex, getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
+import { STATIC_STALE_TIME } from '@/constants/cache';
 
 /**
  * A `name -> types` map for the whole Pokédex, read by the list cards instead
@@ -20,10 +21,10 @@ export function usePokemonTypeIndex() {
           queryClient.ensureQueryData({
             queryKey: queryKeys.type(type),
             queryFn: () => getPokemonByType(type),
-            staleTime: Infinity,
+            staleTime: STATIC_STALE_TIME,
           }),
         (partial) => queryClient.setQueryData(queryKeys.typeIndex, partial),
       ),
-    staleTime: Infinity, // a Pokémon's types never change
+    staleTime: STATIC_STALE_TIME, // a Pokémon's types never change
   });
 }

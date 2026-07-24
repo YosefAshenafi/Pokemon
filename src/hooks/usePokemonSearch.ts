@@ -1,11 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-import { getAllPokemonNames } from "@/api/pokeapi";
-import { queryKeys } from "@/api/queryKeys";
-import type { PokemonSummary } from "@/api/types";
-
-const MAX_RESULTS = 60;
+import { getAllPokemonNames } from '@/api/pokeapi';
+import { queryKeys } from '@/api/queryKeys';
+import type { PokemonSummary } from '@/api/types';
+import { SEARCH_RESULT_LIMIT } from '@/constants/api';
+import { STATIC_STALE_TIME } from '@/constants/cache';
 
 /**
  * Filters the name index. A numeric query (optionally '#'-prefixed) matches
@@ -18,13 +18,13 @@ export function searchPokemonIndex(
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) return [];
 
-  const idQuery = trimmed.replace(/^#/, "");
+  const idQuery = trimmed.replace(/^#/, '');
   if (/^\d+$/.test(idQuery)) {
     const prefix = String(Number(idQuery)); // "025" -> "25", so "#025" finds #25
     return names
       .filter((entry) => String(entry.id).startsWith(prefix))
       .sort((a, b) => a.id - b.id)
-      .slice(0, MAX_RESULTS);
+      .slice(0, SEARCH_RESULT_LIMIT);
   }
 
   const prefixMatches: PokemonSummary[] = [];
@@ -33,7 +33,7 @@ export function searchPokemonIndex(
     if (entry.name.startsWith(trimmed)) prefixMatches.push(entry);
     else if (entry.name.includes(trimmed)) substringMatches.push(entry);
   }
-  return [...prefixMatches, ...substringMatches].slice(0, MAX_RESULTS);
+  return [...prefixMatches, ...substringMatches].slice(0, SEARCH_RESULT_LIMIT);
 }
 
 /**
@@ -44,7 +44,7 @@ export function usePokemonSearch(query: string) {
   const namesQuery = useQuery({
     queryKey: queryKeys.names,
     queryFn: getAllPokemonNames,
-    staleTime: Infinity,
+    staleTime: STATIC_STALE_TIME,
     enabled: query.trim().length > 0,
   });
 

@@ -1,3 +1,5 @@
+import { SPRITE_BASE_URL } from '@/constants/api';
+
 /** `1` → `#001`, `1025` → `#1025` */
 export function formatPokemonId(id: number): string {
   return `#${String(id).padStart(3, '0')}`;
@@ -46,12 +48,12 @@ export function idFromUrl(url: string): number | null {
 
 /** High-res official artwork hosted by the PokeAPI sprites repo. */
 export function artworkUrl(id: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+  return `${SPRITE_BASE_URL}/other/official-artwork/${id}.png`;
 }
 
 /** Small default sprite, the fallback for forms without official artwork. */
 export function spriteUrl(id: number): string {
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+  return `${SPRITE_BASE_URL}/${id}.png`;
 }
 
 /** Fills PokeAPI's `$effect_chance` placeholder in move effect text. */

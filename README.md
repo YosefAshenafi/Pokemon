@@ -95,8 +95,14 @@ src/
     queryClient.ts     #   The QueryClient, AsyncStorage persister and cache migration
     queryKeys.ts       #   Every query key + the persistence allowlist
     types.ts           #   Minimal response shapes, limited to fields used
+  constants/
+    api.ts             #   Origins, page size, request timeout, fetch concurrency, search cap
+    cache.ts           #   Stale times, retry count, max age, storage keys
+    ui.ts              #   Skeleton count, list windowing, screen padding, preview limits
   hooks/               # React Query hooks (list, detail, move, search, types, type index)
-  components/          # PokemonCard, TypeChip, TypeFilterSheet, StatBar, Artwork, skeletons, error state…
+                       # + usePokedexBrowser, which composes them into one list state
+  components/          # PokemonGrid, SearchHeader, PokemonCard, TypeChip, TypeFilterSheet,
+                       # StatBar, Artwork, skeletons, empty & error states…
   theme/               # Design tokens: light/dark Paper themes + Pokémon type colors
   utils/               # Pure formatting helpers (unit-tested)
   test/                # Test harness: the fake PokeAPI, app renderer, appearance & press helpers
@@ -105,6 +111,8 @@ src/
 ### Architecture notes
 
 - **Server state over app state.** All remote data lives in React Query's cache; the only local state is UI state (search text, "show all moves"). Redux/Zustand would add indirection without benefit at this scope.
+- **Screens compose, hooks decide.** Four independent queries back the list — the paginated Pokédex, the name index behind search, a roster per selected type, and the `name → types` map — and which of them is authoritative depends on whether a search, a filter, both or neither is active. That resolution lives in `usePokedexBrowser`, so `src/app/index.tsx` reads as a composition of `SearchHeader`, `PokemonGrid` and the empty/error states rather than a state machine with JSX wrapped around it.
+- **Constants are shared, not hoarded.** `src/constants/` holds the values more than one module reads or that encode a tunable policy — origins, page size, stale times, list windowing. Numbers only one component can meaningfully change (splash timings, the skeleton pulse duration, a pokéball's ring ratio) stay next to that component, so the folder doesn't degrade into a drawer for every literal in the project.
 - **One type index instead of a detail per card.** The list endpoint doesn't include types, and fetching a ~200 KB Pokémon detail per card made deep scrolling crawl. Instead the 18 type endpoints are read once into a `name → types` map that every card reads from: 18 requests for the whole Pokédex rather than one per card. The map is built in batches so chips fill in progressively, and it reuses the same cache entries the type filter fetches, so a type is only ever downloaded once.
 - **Offline-friendly by construction.** The persisted cache is an allowlist (`src/api/queryKeys.ts`): the list, name index, per-type rosters and type index, all small, bounded `{ id, name }`-shaped data, are written to AsyncStorage per query with a 24h max age. Pokémon and move details are deliberately left in memory only; they are large and unbounded, and persisting them filled up Android's storage. Failed background refetches keep showing cached data.
 - **Detail prefetch on press-in.** Tapping a card starts its detail request before the navigation animation begins, so the detail screen usually renders straight from cache without reintroducing the per-card fetch.

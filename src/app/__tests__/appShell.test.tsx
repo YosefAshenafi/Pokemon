@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { screen, waitFor } from 'expo-router/testing-library';
 
-import { CACHE_MIGRATION_KEY } from '@/api/queryClient';
+import { CACHE_MIGRATION_KEY } from '@/constants/cache';
 import { resetSystemColorScheme, setSystemColorScheme } from '@/test/appearance';
 import { renderApp, setupFakeApi } from '@/test/renderApp';
 

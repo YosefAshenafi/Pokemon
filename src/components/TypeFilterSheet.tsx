@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
 import { POKEMON_TYPES } from '@/api/types';
+import { STATIC_STALE_TIME } from '@/constants/cache';
 import { darkColors, lightColors } from '@/theme/paperTheme';
 import { textColorOn, typeColor } from '@/theme/typeColors';
 import { formatName } from '@/utils/format';
@@ -43,7 +44,7 @@ export function TypeFilterSheet({
       queryClient.prefetchQuery({
         queryKey: queryKeys.type(type),
         queryFn: () => getPokemonByType(type),
-        staleTime: Infinity,
+        staleTime: STATIC_STALE_TIME,
       });
     }
   }, [visible, queryClient]);

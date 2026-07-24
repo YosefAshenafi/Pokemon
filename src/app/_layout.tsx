@@ -14,8 +14,9 @@ import { PaperProvider } from 'react-native-paper';
 
 import { darkColors, lightColors, paperDarkTheme, paperLightTheme } from '@/theme/paperTheme';
 
-import { CACHE_MIGRATION_KEY, purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
+import { purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
+import { CACHE_MIGRATION_KEY } from '@/constants/cache';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
