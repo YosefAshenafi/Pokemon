@@ -2,8 +2,7 @@ import '../global.css';
 
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { experimental_createQueryPersister } from '@tanstack/query-persist-client-core';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,7 +14,7 @@ import { PaperProvider } from 'react-native-paper';
 
 import { darkColors, lightColors, paperDarkTheme, paperLightTheme } from '@/theme/paperTheme';
 
-import { isPersistedQueryKey } from '@/api/queryKeys';
+import { CACHE_MIGRATION_KEY, purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -28,34 +27,6 @@ const paperSettings = {
     <MaterialCommunityIcons {...props} />
   ),
 };
-
-const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
-
-// Bump the suffix if the persisted-cache shape changes and old rows must be purged.
-const CACHE_MIGRATION_KEY = 'cache-migrated-v2';
-
-// One AsyncStorage key per query rather than one giant blob, which would hit
-// Android's ~2 MB SQLite CursorWindow per-row limit. Only the small queries in
-// `isPersistedQueryKey` are written: Pokémon detail (~200 KB) and move detail
-// (700+ learners on a popular TM) would fill Android's ~6 MB total budget while
-// browsing. Both still open from the in-memory cache within a session.
-const persister = experimental_createQueryPersister({
-  storage: AsyncStorage,
-  maxAge: CACHE_MAX_AGE,
-  buster: 'v1',
-  filters: { predicate: (query) => isPersistedQueryKey(query.queryKey) },
-});
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: CACHE_MAX_AGE,
-      retry: 2,
-      persister: persister.persisterFn,
-    },
-  },
-});
 
 export default function RootLayout() {
   const isDark = useColorScheme() === 'dark';
@@ -72,11 +43,7 @@ export default function RootLayout() {
     (async () => {
       try {
         if (!(await AsyncStorage.getItem(CACHE_MIGRATION_KEY))) {
-          const keys = await AsyncStorage.getAllKeys();
-          const stale = keys.filter(
-            (k) => k === 'pokedex-query-cache' || k.startsWith('tanstack-query'),
-          );
-          if (stale.length) await AsyncStorage.multiRemove(stale);
+          await purgeLegacyCacheKeys();
           await AsyncStorage.setItem(CACHE_MIGRATION_KEY, '1');
         }
       } catch {

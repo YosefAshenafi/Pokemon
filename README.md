@@ -61,20 +61,41 @@ Then:
 ## Tests
 
 ```bash
-npm test           # 50 unit tests (Jest + React Testing Library)
-npx tsc --noEmit   # type check
-npm run lint       # ESLint
+npm test               # 144 tests + coverage report (Jest + React Testing Library)
+npm run test:watch     # watch mode, without coverage, for iterating
+npx tsc --noEmit       # type check
+npm run lint           # ESLint
 ```
+
+### Coverage
+
+| Statements | Branches | Functions | Lines |
+|---|---|---|---|
+| 100% | 100% | 100% | 100% |
+
+Measured across every file in `src/` (`collectCoverageFrom` in `package.json`), not only the files the tests happen to import. `coverageThreshold` enforces 100% on all four metrics, so `npm test` fails if a single statement, branch or function goes uncovered. No `istanbul ignore` comments are used anywhere — every branch is reached by a real test.
+
+### No mocking of application code
+
+**No module under `src/` is ever mocked.** The screen tests boot the real Expo Router stack over the real route files with `renderRouter('src/app')` — the same `_layout.tsx`, providers, QueryClient, hooks, PokeAPI client and components that run on a device. The only seam is the network: `src/test/fakePokeApi.ts` installs a fake PokeAPI on `globalThis.fetch` that serves a 31-entry dex, and can be steered into going offline, failing a single type, or 404ing a resource.
+
+Three native capabilities have no JavaScript implementation under Jest and are substituted at the platform boundary, each documented where it happens: AsyncStorage (swapped for the library's official in-memory backend), device colour scheme, and the native splash screen. Nothing else is faked.
 
 | Suite | What it covers |
 |---|---|
-| `utils/format` | Heights, weights, Pokédex ids, name casing, sprite URLs, effect-text interpolation |
-| `theme/typeColors` | Type colors, unknown-type fallback, text contrast, stat-bar buckets |
-| `api/pokeapi` | URL building and normalization, pagination, 404 vs. network errors — with `fetch` mocked at the network boundary, not the client |
+| `app/listScreen` | Grid rendering, progressive type chips, pagination and its stopping condition, pull-to-refresh, search by name/number/substring, single and multi-type filtering, chip removal, search+filter composition, empty states, list and index failures with working retries |
+| `app/detailScreen` | Navigation from a card, press-in prefetch, stats, metric/imperial units, type chips, the 8-move preview and See all toggle, move navigation, back, artwork fallback, error and 404 states |
+| `app/moveScreen` | Name/type/damage class, power/accuracy/PP, em dashes for null fields, `$effect_chance` interpolation, non-English effect fallback, error and retry |
+| `app/appShell` | Splash hand-off, the one-time cache migration and its already-run branch, dark mode end to end |
+| `app/missingRouteParam` | Both detail screens mounted at a route with no `[name]` segment, exercising their missing-param guards |
+| `app/splashFailure` | The app still boots when the native splash screen rejects |
+| `api/pokeapi` | URL building and normalization, pagination, 404 vs. network errors, entries with unparseable resource URLs |
 | `api/pokeapi` (type index) | Slot ordering, one failing type skipped, *every* type failing rejects, progressive batch results, `__proto__`-named entries |
+| `api/queryClient` | Legacy cache purge, unrelated keys preserved, persistence defaults |
+| `hooks/usePokemonByTypes` | Empty selection, single roster order, multi-type intersection, disjoint types, partial failure, refetch |
 | `hooks/usePokemonSearch` | Prefix-before-substring ranking, substring matching, id search ordering, `#` prefix and leading zeros |
-| `components/PokemonCard` | Rendering, chips vs. loading placeholders vs. settled-empty, press and press-in callbacks |
-| `components/StatBar` | Label and value rendering, accessibility exposure |
+| `components/*` | Card states and callbacks, artwork fallback chain, stat bars, error state, pokéball geometry, splash timing and theming |
+| `theme/typeColors`, `utils/format` | Type colors, unknown-type fallback, text contrast, stat buckets; heights, weights, ids, name casing, sprite URLs, effect text |
 
 ## Project structure
 
@@ -87,12 +108,14 @@ src/
     move/[name].tsx    #   Move detail screen (power, accuracy, PP, effect)
   api/
     pokeapi.ts         #   Typed PokeAPI client + the type-index build
+    queryClient.ts     #   The QueryClient, AsyncStorage persister and cache migration
     queryKeys.ts       #   Every query key + the persistence allowlist
     types.ts           #   Minimal response shapes, limited to fields used
   hooks/               # React Query hooks (list, detail, move, search, types, type index)
   components/          # PokemonCard, TypeChip, TypeFilterSheet, StatBar, Artwork, skeletons, error state…
   theme/               # Design tokens: light/dark Paper themes + Pokémon type colors
   utils/               # Pure formatting helpers (unit-tested)
+  test/                # Test harness: the fake PokeAPI, app renderer, appearance control
 ```
 
 ## Architecture notes

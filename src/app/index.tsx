@@ -204,6 +204,7 @@ export default function ListScreen() {
         </View>
       ) : (
         <FlatList
+          testID="pokemon-grid"
           data={data}
           renderItem={renderItem}
           keyExtractor={(item) => item.name}

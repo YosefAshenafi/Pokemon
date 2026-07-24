@@ -1,4 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+
+import { holdDown } from '@/test/press';
 
 import { PokemonCard } from '../PokemonCard';
 
@@ -37,6 +40,19 @@ describe('PokemonCard', () => {
     fireEvent.press(screen.getByRole('button'));
 
     expect(onPress).toHaveBeenCalledWith('bulbasaur');
+  });
+
+  it('dims and shrinks while held down', () => {
+    render(<PokemonCard id={1} name="bulbasaur" types={['grass']} onPress={jest.fn()} />);
+    const card = screen.getByRole('button');
+
+    expect(StyleSheet.flatten(card.props.style)?.opacity).toBeUndefined();
+
+    holdDown(card);
+
+    const pressed = StyleSheet.flatten(screen.getByRole('button').props.style);
+    expect(pressed.opacity).toBe(0.85);
+    expect(pressed.transform).toEqual([{ scale: 0.98 }]);
   });
 
   it('invokes onPressIn on press-in so the detail can be prefetched', () => {

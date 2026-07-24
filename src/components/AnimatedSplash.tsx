@@ -52,6 +52,10 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
     return () => {
       clearTimeout(timer);
       loop.stop();
+      // Also stop the fade: clearing the timer only helps before it starts, so
+      // without this an unmount mid-fade would still run the completion
+      // callback and call `onFinish` on a component that is already gone.
+      opacity.stopAnimation();
     };
   }, [spin, opacity, onFinish]);
 
@@ -59,6 +63,7 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
 
   return (
     <Animated.View
+      testID="animated-splash"
       onLayout={onLayout}
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"

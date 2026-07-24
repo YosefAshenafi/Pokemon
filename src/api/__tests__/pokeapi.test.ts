@@ -61,6 +61,23 @@ describe('getPokemonPage', () => {
 
     expect(page.nextOffset).toBeNull();
   });
+
+  it('skips entries whose resource URL carries no id', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        count: 2,
+        next: null,
+        results: [
+          { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon/1/' },
+          { name: 'mystery', url: 'https://pokeapi.co/api/v2/pokemon/unknown' },
+        ],
+      }),
+    );
+
+    const page = await getPokemonPage(0);
+
+    expect(page.pokemon).toEqual([{ id: 1, name: 'bulbasaur' }]);
+  });
 });
 
 describe('getPokemon', () => {
@@ -116,6 +133,21 @@ describe('getPokemonByType', () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
 
     await expect(getPokemonByType('notatype')).rejects.toThrow('Type not found.');
+  });
+
+  it('drops members whose resource URL carries no id', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({
+        pokemon: [
+          { slot: 1, pokemon: { name: 'charmander', url: 'https://pokeapi.co/api/v2/pokemon/4/' } },
+          { slot: 1, pokemon: { name: 'mystery', url: 'https://pokeapi.co/api/v2/pokemon/' } },
+        ],
+      }),
+    );
+
+    const members = await getPokemonByType('fire');
+
+    expect(members).toEqual([{ id: 4, name: 'charmander', slot: 1 }]);
   });
 });
 

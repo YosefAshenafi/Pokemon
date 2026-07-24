@@ -32,6 +32,12 @@ describe('formatName', () => {
     expect(formatName('mr-mime')).toBe('Mr Mime');
     expect(formatName('vine-whip')).toBe('Vine Whip');
   });
+
+  it('leaves empty segments alone rather than crashing on them', () => {
+    // PokeAPI form names occasionally double up their separators.
+    expect(formatName('ho--oh')).toBe('Ho  Oh');
+    expect(formatName('-porygon')).toBe(' Porygon');
+  });
 });
 
 describe('height formatting (decimetres in)', () => {

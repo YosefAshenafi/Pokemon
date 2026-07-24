@@ -47,6 +47,7 @@ export function Artwork({ id, alt, className, pokemon, placeholderSize = 56 }: A
 
   return (
     <Image
+      testID="pokemon-artwork"
       source={source}
       alt={alt}
       contentFit="contain"
