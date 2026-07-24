@@ -21,7 +21,7 @@ const TOUCH_EVENT = {
  * asserted.
  *
  * `fireEvent(el, 'pressIn')` invokes the `onPressIn` prop directly, which never
- * reaches Pressability's internal pressed state — granting the touch responder
+ * reaches Pressability's internal pressed state - granting the touch responder
  * does, exactly as a real finger would.
  */
 export function holdDown(element: ReactTestInstance): void {

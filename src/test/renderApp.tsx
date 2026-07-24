@@ -6,7 +6,7 @@ import { queryClient } from '@/api/queryClient';
 import { installFakePokeApi, type FakePokeApi } from './fakePokeApi';
 
 /**
- * Boots the real Expo Router stack over the real `src/app` route files — the
+ * Boots the real Expo Router stack over the real `src/app` route files - the
  * same `_layout.tsx`, screens, providers and QueryClient the device runs. Only
  * the network is faked, via `installFakePokeApi`.
  */
@@ -29,7 +29,7 @@ export function setupFakeApi(): () => FakePokeApi {
     // Configure the real client rather than replacing it: React Query's default
     // exponential backoff would add seconds of dead wait to every failure test,
     // and retry counts are the library's behaviour, not this app's. Every other
-    // default — staleTime, gcTime, the AsyncStorage persister — is preserved.
+    // default - staleTime, gcTime, the AsyncStorage persister - is preserved.
     const defaults = queryClient.getDefaultOptions();
     queryClient.setDefaultOptions({
       ...defaults,
@@ -54,7 +54,7 @@ const GRID = 'pokemon-grid';
  * `endReached` is fired directly: VirtualizedList decides that threshold from
  * measured layout, and the test renderer measures every element as zero-sized,
  * so a scroll offset alone never crosses it. This fires the screen's own
- * `onEndReached` handler — guards and all — the way `press` fires `onPress`.
+ * `onEndReached` handler - guards and all - the way `press` fires `onPress`.
  */
 export function scrollToEnd(testID = GRID) {
   const grid = screen.getByTestId(testID);

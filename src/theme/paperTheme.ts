@@ -3,7 +3,7 @@ import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
 /**
  * The design tokens read from JavaScript: the Paper themes below and the few
  * inline styles that can't use a class. NativeWind's copy of the same palette
- * lives in `src/global.css` — keep the two in sync.
+ * lives in `src/global.css` - keep the two in sync.
  */
 export const lightColors = {
   brand: '#2D50C8',

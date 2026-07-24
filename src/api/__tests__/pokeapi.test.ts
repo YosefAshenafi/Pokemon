@@ -106,6 +106,79 @@ describe('getPokemon', () => {
   });
 });
 
+describe('request safety', () => {
+  it('sends every request to the pinned HTTPS origin only', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 25, name: 'pikachu' }));
+
+    await getPokemon('pikachu');
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toMatch(/^https:\/\/pokeapi\.co\/api\/v2\//);
+  });
+
+  it('percent-encodes a name so it cannot break out of its path', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
+
+    // A path-traversal-style name must stay a single, escaped path segment
+    // rather than climbing to another endpoint.
+    await expect(getPokemon('../../../secret')).rejects.toBeInstanceOf(ApiError);
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toBe('https://pokeapi.co/api/v2/pokemon/..%2F..%2F..%2Fsecret');
+    expect(url).not.toContain('/secret');
+  });
+
+  it('escapes a type name before putting it in the path', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
+
+    await expect(getPokemonByType('fire/../pokemon/1')).rejects.toBeInstanceOf(ApiError);
+
+    const [url] = mockFetch.mock.calls[0];
+    expect(url).toBe('https://pokeapi.co/api/v2/type/fire%2F..%2Fpokemon%2F1');
+  });
+
+  it('aborts a request that never responds and reports a timeout', async () => {
+    jest.useFakeTimers();
+    try {
+      // Resolve only if the request is aborted, mimicking a dead socket that
+      // hangs until the client gives up.
+      mockFetch.mockImplementation(
+        (_url: string, options: { signal: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            options.signal.addEventListener('abort', () =>
+              reject(new DOMException('The operation was aborted.', 'AbortError')),
+            );
+          }),
+      );
+
+      const pending = getPokemon('pikachu');
+      const settled = pending.catch((error) => error);
+
+      await jest.advanceTimersByTimeAsync(15000);
+
+      const error = await settled;
+      expect(error).toBeInstanceOf(ApiError);
+      expect(String(error)).toMatch(/timed out/i);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('clears the timeout once a request succeeds, leaving no pending timers', async () => {
+    jest.useFakeTimers();
+    try {
+      mockFetch.mockResolvedValueOnce(jsonResponse({ id: 25, name: 'pikachu' }));
+
+      await getPokemon('pikachu');
+
+      // The abort timer was cleared on success, so nothing is left to fire.
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});
+
 describe('getPokemonByType', () => {
   it('normalizes the type, keeps each member’s slot, and sorts by id', async () => {
     mockFetch.mockResolvedValueOnce(

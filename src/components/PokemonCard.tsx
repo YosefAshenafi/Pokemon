@@ -16,8 +16,8 @@ interface PokemonCardProps {
 }
 
 /**
- * Grid card for the list screen. Purely presentational — artwork comes from the
- * id and types are passed in — so it stays cheap to render during fast scroll.
+ * Grid card for the list screen. Purely presentational - artwork comes from the
+ * id and types are passed in - so it stays cheap to render during fast scroll.
  */
 export const PokemonCard = memo(function PokemonCard({
   id,

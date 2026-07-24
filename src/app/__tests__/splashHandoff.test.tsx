@@ -5,7 +5,7 @@ import { renderApp, setupFakeApi } from '@/test/renderApp';
 /**
  * The splash deliberately holds for 1400 ms and fades for 350 ms. Waiting that
  * out for real was the slowest thing in the suite, so the clock is advanced
- * instead — which tests the same hand-off deterministically and in a fraction
+ * instead - which tests the same hand-off deterministically and in a fraction
  * of the time.
  *
  * Timer mode is per-file in Jest, so this lives on its own: switching back to

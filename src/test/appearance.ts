@@ -3,7 +3,7 @@ type ColorSchemeGlobal = { __colorScheme?: 'light' | 'dark' };
 /**
  * Forces the system colour scheme for a test.
  *
- * Device appearance is a native capability with no implementation under Jest —
+ * Device appearance is a native capability with no implementation under Jest -
  * `Appearance.setColorScheme` is a no-op and jest-expo pins `useColorScheme()`
  * to 'light'. `jest.setup.ts` makes that hook read this value instead. Only the
  * device is faked: every screen and component still resolves its own colours

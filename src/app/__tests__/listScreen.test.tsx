@@ -114,7 +114,7 @@ describe('List screen', () => {
   }, TIMEOUT);
 });
 
-describe('List screen — work in progress', () => {
+describe('List screen - work in progress', () => {
   it('shows placeholder chips on the cards while the type index is still loading', async () => {
     getApi().hold.add('/type/');
     renderApp();
@@ -145,7 +145,7 @@ describe('List screen — work in progress', () => {
   }, TIMEOUT);
 });
 
-describe('List screen — failure handling', () => {
+describe('List screen - failure handling', () => {
   it('explains a type filter that could not be loaded', async () => {
     // Fail from the start: the type index reads the same cache entry, so a type
     // that loaded at boot would still filter fine from cache.

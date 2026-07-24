@@ -52,7 +52,7 @@ describe('usePokemonByTypes', () => {
 
     await waitFor(() => expect(result.current.data.length).toBeGreaterThan(0));
 
-    // Grass ∩ Poison — Ekans is Poison alone, Charmander is neither.
+    // Grass ∩ Poison - Ekans is Poison alone, Charmander is neither.
     expect(result.current.data.map((p) => p.name)).toEqual([
       'bulbasaur',
       'ivysaur',

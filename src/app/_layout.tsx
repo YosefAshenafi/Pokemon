@@ -37,7 +37,7 @@ export default function RootLayout() {
   // One-time migration: earlier builds persisted the whole cache, which could leave
   // the AsyncStorage DB full on Android. multiRemove frees space even when the DB is
   // full, so this is safe to run against a SQLITE_FULL database. The tree below waits
-  // for it — a query persisting between the getAllKeys snapshot and the removal would
+  // for it - a query persisting between the getAllKeys snapshot and the removal would
   // be deleted too, leaving this launch with no cache at all.
   useEffect(() => {
     (async () => {

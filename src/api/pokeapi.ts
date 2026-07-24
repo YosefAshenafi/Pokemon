@@ -10,9 +10,15 @@ import type {
   TypeResponse,
 } from './types';
 
+// HTTPS only. Kept as a constant so a plain-HTTP or attacker-controlled base can
+// never be introduced by a typo elsewhere in the client.
 const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
 
 const PAGE_SIZE = 24;
+
+// A hung socket must not pin a query in its loading state forever, so every
+// request is aborted after this long and surfaces as a normal, retryable error.
+const REQUEST_TIMEOUT_MS = 15000;
 
 export class ApiError extends Error {
   constructor(
@@ -24,24 +30,42 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The single choke point every request passes through. Callers pass only a
+ * path, never a full URL, so the HTTPS origin above is the only host this client
+ * can ever reach; all interpolated segments are `encodeURIComponent`-escaped by
+ * the callers so a name can never break out of its path.
+ */
 async function fetchJson<T>(path: string, notFoundMessage = 'Pokémon not found.'): Promise<T> {
-  let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
-    response = await fetch(`${POKEAPI_BASE_URL}${path}`, {
-      headers: { Accept: 'application/json' },
-    });
-  } catch {
-    throw new ApiError('Network request failed. Check your connection and try again.');
-  }
+    let response: Response;
+    try {
+      response = await fetch(`${POKEAPI_BASE_URL}${path}`, {
+        headers: { Accept: 'application/json' },
+        signal: controller.signal,
+      });
+    } catch {
+      throw new ApiError(
+        controller.signal.aborted
+          ? 'The request timed out. Check your connection and try again.'
+          : 'Network request failed. Check your connection and try again.',
+      );
+    }
 
-  if (!response.ok) {
-    throw new ApiError(
-      response.status === 404 ? notFoundMessage : `PokeAPI request failed (${response.status}).`,
-      response.status,
-    );
-  }
+    if (!response.ok) {
+      throw new ApiError(
+        response.status === 404 ? notFoundMessage : `PokeAPI request failed (${response.status}).`,
+        response.status,
+      );
+    }
 
-  return (await response.json()) as T;
+    return (await response.json()) as T;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function toSummaries(results: PokemonListResponse['results']): PokemonSummary[] {
@@ -101,7 +125,7 @@ function toIndex(slotted: Map<string, { slot: number; type: string }[]>): Pokemo
 
 /**
  * Builds the type index by reading each type's roster once, so list cards get
- * their chips without each fetching a ~200 KB detail — the N+1 that made deep
+ * their chips without each fetching a ~200 KB detail - the N+1 that made deep
  * infinite scroll crawl. `loadType` is injected so the caller can serve it from
  * the same cache the type filter uses; `onProgress` reports the index so far.
  *

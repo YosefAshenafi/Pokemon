@@ -7,7 +7,7 @@ setupFakeApi();
 const SETTLE = { timeout: 15000 };
 const TIMEOUT = 30000;
 
-describe('List screen — search', () => {
+describe('List screen - search', () => {
   it('finds a Pokémon by name and hides the rest', async () => {
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);
@@ -74,7 +74,7 @@ describe('List screen — search', () => {
   }, TIMEOUT);
 });
 
-describe('List screen — type filter', () => {
+describe('List screen - type filter', () => {
   it('narrows the grid to a single selected type', async () => {
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);

@@ -3,7 +3,7 @@
  *
  * This is the only seam the test suite fakes. Everything above it runs for
  * real: `src/api/pokeapi.ts`, every hook, React Query, the Expo Router stack
- * and all components. Nothing under `src/` is ever `jest.mock`ed — swapping the
+ * and all components. Nothing under `src/` is ever `jest.mock`ed - swapping the
  * network is the equivalent of pointing an integration suite at a test server
  * rather than production.
  *
@@ -221,7 +221,7 @@ export function installFakePokeApi(): FakePokeApi {
 
     const path = url.replace(`${BASE}/`, '');
 
-    // /pokemon?offset=N&limit=M — the paginated dex and the full name index.
+    // /pokemon?offset=N&limit=M - the paginated dex and the full name index.
     const listMatch = /^pokemon\?offset=(\d+)&limit=(\d+)$/.exec(path);
     if (listMatch) {
       const offset = Number(listMatch[1]);
