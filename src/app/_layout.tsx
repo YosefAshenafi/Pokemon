@@ -4,7 +4,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { Stack } from 'expo-router';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { cssInterop } from 'nativewind';
@@ -16,6 +16,7 @@ import { darkColors, lightColors, paperDarkTheme, paperLightTheme } from '@/them
 
 import { purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
+import { ErrorState } from '@/components/ErrorState';
 import { CACHE_MIGRATION_KEY } from '@/constants/cache';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -28,6 +29,31 @@ const paperSettings = {
     <MaterialCommunityIcons {...props} />
   ),
 };
+
+/**
+ * Expo Router mounts this in place of the tree when a render throws, instead of
+ * unmounting the app. Everything below reads third-party responses, so this is
+ * the last stop for a shape the client validated too loosely - without it, one
+ * unexpected field is a white screen with no way back.
+ *
+ * React has already logged the error by the time this renders; a crash reporter
+ * would be wired in here.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? darkColors : lightColors;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ErrorState
+        message={`This screen could not be shown. ${error.message}`}
+        onRetry={() => {
+          retry();
+        }}
+      />
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const isDark = useColorScheme() === 'dark';
