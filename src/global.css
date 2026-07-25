@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Semantic tokens behind the Tailwind color classes, so dark mode needs no
+ * per-component work. Keep in sync with src/theme/paperTheme.ts.
+ */
+:root {
+  --color-bg: #f6f7fc;
+  --color-surface: #ffffff;
+  --color-ink: #1b2137;
+  /* Both clear WCAG AA (4.5:1) on --color-bg, the lighter of the two surfaces
+     they sit on. The grey --color-ink-subtle replaced measured 2.6:1, failing
+     at the 11px it is used at on the card numbers. */
+  --color-ink-muted: #545b78;
+  --color-ink-subtle: #666d8b;
+  --color-track: #eef0f7;
+  --color-line: #eceef6;
+  --color-accent: #2d50c8;
+  --color-accent-soft: #e8edfb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0e1118;
+    --color-surface: #171b26;
+    --color-ink: #e7eaf3;
+    --color-ink-muted: #9aa2bc;
+    --color-ink-subtle: #8791af;
+    --color-track: #232939;
+    --color-line: #252b3b;
+    --color-accent: #9fb2f5;
+    --color-accent-soft: #232b47;
+  }
+}
