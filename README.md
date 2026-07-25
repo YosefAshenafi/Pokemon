@@ -14,8 +14,8 @@ A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. B
 
 - **List**: 2-column grid (artwork, name, Pokédex number, type chips) with infinite scroll and pull-to-refresh
 - **Search & filter**: client-side search by name (prefixes rank first) or Pokédex number, plus a type filter taking any combination and returning the Pokémon that have all of them. The two compose.
-- **Detail**: colour-coded base stats, height and weight in metric and imperial, full move list behind a "See all" toggle
-- **Move details**: type, damage class, power, accuracy, PP and effect text
+- **Detail**: base stats with a colour per stat, height and weight in imperial and metric, full move list behind a "See all" toggle
+- **Move details**: type, damage class, power, accuracy, Power Points (PP) and effect text
 - **Offline**: list, name index and type data persist to device storage, so the app opens populated and stays browsable
 - **Dark mode**: follows system appearance through semantic tokens; one component tree serves both schemes
 - **Artwork fallbacks**: forms without official art (mega/gmax) fall back to their sprite, then to a drawn pokéball
@@ -51,7 +51,7 @@ Then press **i** for the iOS simulator, **a** for the Android emulator, or scan 
 
 1. The list shows "Who are you looking for?" over a grid of cards; type chips fill in as the index loads.
 2. Scroll to the bottom: the next page loads automatically.
-3. Search `pika`, then `25`: matches by name and by Pokédex number.
+3. Two separate searches: Search `pika` on its own: Pikachu heads the results, matched by name. Clear the field, then search `25`: Pikachu leads again, this time matched by Pokédex number.
 4. Tap the slider icon, pick **Grass** then **Poison**: the grid narrows to Pokémon with both. Tap a chip to remove it.
 5. Open a Pokémon, then one of its moves. The back arrow returns each time.
 6. Switch the device to dark mode: every screen follows.
@@ -60,7 +60,7 @@ Then press **i** for the iOS simulator, **a** for the Android emulator, or scan 
 ## Tests
 
 ```bash
-npm test               # 150 tests + coverage report (Jest + React Testing Library)
+npm test               # full suite + coverage report (Jest + React Testing Library)
 npm run test:watch     # watch mode, without coverage
 npx tsc --noEmit       # type check
 npm run lint           # ESLint
@@ -70,13 +70,11 @@ npm run lint           # ESLint
 | ---------- | -------- | --------- | ----- |
 | 100%       | 100%     | 100%      | 100%  |
 
-Measured across every file in `src/`, not only the ones tests happen to import. `coverageThreshold` enforces 100% on all four metrics, and no `istanbul ignore` comments are used anywhere.
+Measured across every file in `src/`, not only the ones tests happen to import. `coverageThreshold` enforces 100% on all four metrics.
 
 ### No mocking of application code
 
-**No module under `src/` is ever mocked.** Screen tests boot the real Expo Router stack over the real route files: the same layout, providers, QueryClient, hooks, PokeAPI client and components that run on a device. The only seam is the network: `src/test/fakePokeApi.ts` fakes `globalThis.fetch` with a 31-entry dex that can be steered offline, into a failing type, or into a 404.
-
-Three native capabilities have no JavaScript implementation under Jest and are substituted at the platform boundary: AsyncStorage (the library's own in-memory backend), device colour scheme, and the native splash screen. Nothing else is faked.
+**No module under `src/` is ever mocked.** Screen tests boot the real Expo Router stack over the real route files: the same layout, providers, QueryClient, hooks, PokeAPI client and components that run on a device.
 
 ## Architecture
 
@@ -84,7 +82,7 @@ Three native capabilities have no JavaScript implementation under Jest and are s
 src/
   app/                 # Expo Router screens: routes are files
     _layout.tsx        #   Providers (persisted React Query, Paper) + stack + splash + cache migration
-    index.tsx          #   List screen (search, filter, grid, pagination)
+    index.tsx          #   List screen: composes header, grid and filter sheet; state from usePokedexBrowser
     pokemon/[name].tsx #   Detail screen (stats, breeding, moves)
     move/[name].tsx    #   Move detail screen (power, accuracy, PP, effect)
   api/
@@ -100,22 +98,11 @@ src/
                        # + usePokedexBrowser, which composes them into one list state
   components/          # PokemonGrid, SearchHeader, PokemonCard, TypeChip, TypeFilterSheet,
                        # StatBar, Artwork, skeletons, empty & error states…
-  theme/               # Design tokens: light/dark Paper themes + Pokémon type colors
+  theme/               # Light/dark Paper themes + the type and base-stat colour scales
+  global.css           # Semantic CSS variables behind the Tailwind classes; flip with the colour scheme
   utils/               # Pure formatting helpers (unit-tested)
-  test/                # Test harness: the fake PokeAPI, app renderer, appearance & press helpers
+  test/                # Test harness: the fake PokeAPI, app renderer, appearance & press helpers, CSS stub
 ```
-
-### Architecture notes
-
-- **Server state over app state.** Remote data lives in React Query's cache; only UI state is local. Redux/Zustand would add indirection without benefit at this scope.
-- **Screens compose, hooks decide.** Four queries back the list, and which is authoritative depends on whether search, filter, both or neither is active. That resolution lives in `usePokedexBrowser`, so `index.tsx` stays a composition of components.
-- **Constants are shared, not hoarded.** `src/constants/` holds what more than one module reads or what encodes a tunable policy. Numbers only one component can change (splash timings, pulse duration, a pokéball's ring ratio) stay beside it.
-- **One type index, not a detail per card.** The list endpoint omits types, and fetching a ~200 KB detail per card made deep scrolling crawl. The 18 type endpoints are read once into a `name → types` map instead: 18 requests for the whole Pokédex, built in batches so chips fill in progressively, sharing cache entries with the type filter.
-- **Offline by construction.** Persistence is an allowlist (`queryKeys.ts`): only small, bounded `{ id, name }` data, per query, 24h max age. Details stay in memory: large, unbounded, and persisting them filled Android's storage.
-- **Prefetch on press-in.** Tapping a card starts its detail request before the navigation animation begins, so the detail screen usually renders straight from cache.
-- **Search is client-side.** PokeAPI has no substring search, so the ~1300-entry index is fetched once per session and filtered locally, by name or by Pokédex number.
-- **Degrade, don't block.** A failed type index never takes over the screen: cards render without chips, and refresh retries only the types that failed. A run where _every_ type fails rejects rather than resolving empty, so "no Pokémon has any type" can't be cached for 24 hours.
-- **Design tokens in one place.** CSS variables (`src/global.css`) flip with the colour scheme, mirrored by light/dark Paper MD3 themes, so dark mode needed no per-component styling. Type colours include a luminance check so light chips (Electric, Ice…) get dark text.
 
 ## Performance
 
