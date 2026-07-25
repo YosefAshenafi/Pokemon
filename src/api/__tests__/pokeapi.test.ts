@@ -104,6 +104,32 @@ describe('getPokemon', () => {
     await expect(getPokemon('pikachu')).rejects.toBeInstanceOf(ApiError);
     await expect(getPokemon('pikachu')).rejects.toThrow(/check your connection/i);
   });
+
+  it('keeps the original failure as the error’s cause', async () => {
+    const underlying = new TypeError('Network request failed');
+    mockFetch.mockRejectedValue(underlying);
+
+    // Our wording is what the user reads; the cause is what a crash report needs.
+    const error = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
+
+    expect(error.cause).toBe(underlying);
+  });
+
+  it('reports a body that is not JSON as an ApiError rather than a SyntaxError', async () => {
+    // A proxy or captive portal answering 200 with an HTML error page.
+    const invalid = new SyntaxError('Unexpected token < in JSON at position 0');
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(invalid),
+    } as unknown as Response);
+
+    const error = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toMatch(/could not be read/i);
+    expect(error.cause).toBe(invalid);
+  });
 });
 
 describe('request safety', () => {

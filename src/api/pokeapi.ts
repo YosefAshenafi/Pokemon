@@ -20,8 +20,10 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status?: number,
+    /** The underlying failure, kept so a report carries more than our wording. */
+    options?: { cause?: unknown },
   ) {
-    super(message);
+    super(message, options);
     this.name = 'ApiError';
   }
 }
@@ -43,11 +45,13 @@ async function fetchJson<T>(path: string, notFoundMessage = 'Pokémon not found.
         headers: { Accept: 'application/json' },
         signal: controller.signal,
       });
-    } catch {
+    } catch (cause) {
       throw new ApiError(
         controller.signal.aborted
           ? 'The request timed out. Check your connection and try again.'
           : 'Network request failed. Check your connection and try again.',
+        undefined,
+        { cause },
       );
     }
 
@@ -58,7 +62,16 @@ async function fetchJson<T>(path: string, notFoundMessage = 'Pokémon not found.
       );
     }
 
-    return (await response.json()) as T;
+    // A 200 carrying a proxy's HTML error page parses as a SyntaxError, not a
+    // network failure. Converting it here keeps every failure out of this
+    // client shaped like an ApiError, so no caller has to render a raw one.
+    try {
+      return (await response.json()) as T;
+    } catch (cause) {
+      throw new ApiError('The server sent a response that could not be read.', undefined, {
+        cause,
+      });
+    }
   } finally {
     clearTimeout(timeout);
   }
@@ -71,10 +84,16 @@ function toSummaries(results: PokemonListResponse['results']): PokemonSummary[] 
   });
 }
 
+/** One page of the Pokédex, with the offset the next page starts at. */
+export interface PokemonPage {
+  pokemon: PokemonSummary[];
+  count: number;
+  /** `null` once the Pokédex has no further pages. */
+  nextOffset: number | null;
+}
+
 /** One page of the Pokédex, in National Dex order. */
-export async function getPokemonPage(
-  offset: number,
-): Promise<{ pokemon: PokemonSummary[]; count: number; nextOffset: number | null }> {
+export async function getPokemonPage(offset: number): Promise<PokemonPage> {
   const data = await fetchJson<PokemonListResponse>(`/pokemon?offset=${offset}&limit=${PAGE_SIZE}`);
   const nextOffset = data.next ? offset + PAGE_SIZE : null;
   return { pokemon: toSummaries(data.results), count: data.count, nextOffset };
