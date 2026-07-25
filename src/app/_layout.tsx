@@ -1,0 +1,101 @@
+import '../global.css';
+
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Image } from 'expo-image';
+import { Stack, type ErrorBoundaryProps } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { cssInterop } from 'nativewind';
+import { useEffect, useState } from 'react';
+import { useColorScheme, View } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+
+import { darkColors, lightColors, paperDarkTheme, paperLightTheme } from '@/theme/paperTheme';
+
+import { purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
+import { AnimatedSplash } from '@/components/AnimatedSplash';
+import { ErrorState } from '@/components/ErrorState';
+import { CACHE_MIGRATION_KEY } from '@/constants/cache';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+cssInterop(Image, { className: 'style' });
+cssInterop(MaterialCommunityIcons, { className: 'style' });
+
+const paperSettings = {
+  icon: (props: React.ComponentProps<typeof MaterialCommunityIcons>) => (
+    <MaterialCommunityIcons {...props} />
+  ),
+};
+
+/**
+ * Expo Router mounts this in place of the tree when a render throws, instead of
+ * unmounting the app. Everything below reads third-party responses, so this is
+ * the last stop for a shape the client validated too loosely - without it, one
+ * unexpected field is a white screen with no way back.
+ *
+ * React has already logged the error by the time this renders; a crash reporter
+ * would be wired in here.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? darkColors : lightColors;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <ErrorState
+        message={`This screen could not be shown. ${error.message}`}
+        onRetry={() => {
+          retry();
+        }}
+      />
+    </View>
+  );
+}
+
+export default function RootLayout() {
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? darkColors : lightColors;
+  const [splashVisible, setSplashVisible] = useState(true);
+  const [cacheReady, setCacheReady] = useState(false);
+
+  // One-time migration: earlier builds persisted the whole cache, which could leave
+  // the AsyncStorage DB full on Android. multiRemove frees space even when the DB is
+  // full, so this is safe to run against a SQLITE_FULL database. The tree below waits
+  // for it - a query persisting between the getAllKeys snapshot and the removal would
+  // be deleted too, leaving this launch with no cache at all.
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!(await AsyncStorage.getItem(CACHE_MIGRATION_KEY))) {
+          await purgeLegacyCacheKeys();
+          await AsyncStorage.setItem(CACHE_MIGRATION_KEY, '1');
+        }
+      } catch {
+        // Best-effort cleanup; the app works without it.
+      } finally {
+        setCacheReady(true);
+      }
+    })();
+  }, []);
+
+  // A couple of AsyncStorage round trips, still behind the native splash.
+  if (!cacheReady) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <PaperProvider theme={isDark ? paperDarkTheme : paperLightTheme} settings={paperSettings}>
+        <StatusBar style={splashVisible && !isDark ? 'dark' : 'light'} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.bg },
+          }}
+        />
+        {splashVisible ? <AnimatedSplash onFinish={() => setSplashVisible(false)} /> : null}
+      </PaperProvider>
+    </QueryClientProvider>
+  );
+}
