@@ -8,7 +8,7 @@ A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. B
 
 |                                                List & search                                                |                                                         Detail                                                          |
 | :---------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------: |
-| <img src="docs/screenshots/list.png" alt="List screen with search bar and Pokémon card grid" width="340" /> | <img src="docs/screenshots/detail.png" alt="Bulbasaur detail screen with stats, breeding info and moves" width="340" /> |
+| <img width="340" alt="List screen with search bar and Pokémon card grid" src="https://github.com/user-attachments/assets/d21b4e16-810b-4c90-bebf-f73aa4708443" /> | <img width="340" alt="Bulbasaur detail screen with stats, breeding info and moves" src="https://github.com/user-attachments/assets/410874d1-d7fc-416e-a69a-9f1ab34bdb1e" /> |
 
 ## Features
 
