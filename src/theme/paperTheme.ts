@@ -11,8 +11,12 @@ export const lightColors = {
   bg: '#F6F7FC',
   surface: '#FFFFFF',
   ink: '#1B2137',
-  inkMuted: '#6A7190',
-  inkSubtle: '#9AA0B5',
+  // Both greys clear WCAG AA (4.5:1) against `bg`, the lighter of the two
+  // backgrounds they sit on. `bg` caps a passing grey at about #6A7190, so
+  // `inkMuted` moves darker to keep the two tiers apart. Asserted in
+  // `theme/__tests__/typeColors.test.ts`.
+  inkMuted: '#545B78',
+  inkSubtle: '#666D8B',
   track: '#EEF0F7',
   line: '#ECEEF6',
   accent: '#2D50C8',
