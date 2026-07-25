@@ -44,12 +44,12 @@ describe('Detail screen', () => {
     expect(screen.getByLabelText('Speed: 45')).toBeTruthy();
   }, TIMEOUT);
 
-  it('shows height and weight in both metric and imperial', async () => {
+  it('shows height and weight in imperial then metric', async () => {
     renderApp('/pokemon/bulbasaur');
 
     expect(await screen.findByText('Breeding', {}, SETTLE)).toBeTruthy();
-    expect(screen.getByText('0.7 m · 2\'04"')).toBeTruthy();
-    expect(screen.getByText('6.9 kg · 15.2 lbs')).toBeTruthy();
+    expect(screen.getByText('2\'04" · 0.7 m')).toBeTruthy();
+    expect(screen.getByText('15.2 lbs · 6.9 kg')).toBeTruthy();
   }, TIMEOUT);
 
   it('shows the type chips for the Pokémon', async () => {

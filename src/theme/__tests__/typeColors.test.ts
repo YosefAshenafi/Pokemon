@@ -22,9 +22,19 @@ describe('textColorOn', () => {
 });
 
 describe('statColor', () => {
-  it('buckets values into low / mid / high colors', () => {
-    expect(statColor(30)).toBe('#EC6A5E');
-    expect(statColor(65)).toBe('#F2B450');
-    expect(statColor(120)).toBe('#5FBD58');
+  it('gives every stat its own color', () => {
+    const stats = ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'];
+    const colors = stats.map(statColor);
+
+    expect(new Set(colors).size).toBe(stats.length);
+  });
+
+  it('keys off the stat rather than the value', () => {
+    expect(statColor('hp')).toBe('#5FBD58');
+    expect(statColor('Special-Attack')).toBe('#5B9DEF');
+  });
+
+  it('falls back to a neutral color for unknown stats', () => {
+    expect(statColor('accuracy')).toBe('#8A8FA3');
   });
 });

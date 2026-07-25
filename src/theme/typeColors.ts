@@ -22,10 +22,11 @@ const TYPE_COLORS: Record<PokemonType, string> = {
   fairy: '#D685AD',
 };
 
-const FALLBACK_TYPE_COLOR = '#8A8FA3';
+/** Neutral grey for a type or stat key the API sends that we don't have a colour for. */
+const FALLBACK_COLOR = '#8A8FA3';
 
 export function typeColor(type: string): string {
-  return TYPE_COLORS[type.toLowerCase() as PokemonType] ?? FALLBACK_TYPE_COLOR;
+  return TYPE_COLORS[type.toLowerCase() as PokemonType] ?? FALLBACK_COLOR;
 }
 
 /**
@@ -42,9 +43,24 @@ export function textColorOn(background: string): string {
   return luminance > 0.6 ? '#1B2137' : '#FFFFFF';
 }
 
-/** Color for a base-stat bar: low → red, mid → amber, high → green. */
-export function statColor(value: number): string {
-  if (value < 50) return '#EC6A5E';
-  if (value < 90) return '#F2B450';
-  return '#5FBD58';
+/**
+ * One fixed colour per stat row, keyed by the raw PokéAPI stat name.
+ *
+ * Colouring by which stat it is rather than by how large the value is keeps a
+ * row's colour stable across Pokémon, so the six bars stay readable as six
+ * distinct stats. Grading by value instead would render a whole early-route
+ * Pokémon in a single band - Bulbasaur's stats top out at 65 - and lose that.
+ */
+const STAT_COLORS: Record<string, string> = {
+  hp: '#5FBD58',
+  attack: '#EC6A5E',
+  defense: '#F2B450',
+  'special-attack': '#5B9DEF',
+  'special-defense': '#4EC5B0',
+  speed: '#EF8C50',
+};
+
+/** Colour for a base-stat bar, e.g. `special-attack` → blue. */
+export function statColor(stat: string): string {
+  return STAT_COLORS[stat.toLowerCase()] ?? FALLBACK_COLOR;
 }

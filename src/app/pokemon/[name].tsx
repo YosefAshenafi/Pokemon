@@ -98,7 +98,12 @@ export default function DetailScreen() {
 
           <SectionCard title="Base Stats">
             {data.stats.map(({ stat, base_stat }) => (
-              <StatBar key={stat.name} label={formatStatName(stat.name)} value={base_stat} />
+              <StatBar
+                key={stat.name}
+                stat={stat.name}
+                label={formatStatName(stat.name)}
+                value={base_stat}
+              />
             ))}
           </SectionCard>
 
@@ -107,13 +112,13 @@ export default function DetailScreen() {
               <View className="flex-1 rounded-xl bg-bg px-4 py-3">
                 <Text className="text-xs text-ink-muted">Height</Text>
                 <Text className="mt-1 text-sm font-semibold text-ink">
-                  {formatHeightMeters(data.height)} · {formatHeightFeetInches(data.height)}
+                  {formatHeightFeetInches(data.height)} · {formatHeightMeters(data.height)}
                 </Text>
               </View>
               <View className="flex-1 rounded-xl bg-bg px-4 py-3">
                 <Text className="text-xs text-ink-muted">Weight</Text>
                 <Text className="mt-1 text-sm font-semibold text-ink">
-                  {formatWeightKg(data.weight)} · {formatWeightLbs(data.weight)}
+                  {formatWeightLbs(data.weight)} · {formatWeightKg(data.weight)}
                 </Text>
               </View>
             </View>
