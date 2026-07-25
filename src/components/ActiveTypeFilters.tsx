@@ -1,13 +1,14 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, Text, View } from 'react-native';
 
+import type { PokemonType } from '@/api/types';
 import { textColorOn, typeColor } from '@/theme/typeColors';
 import { formatName } from '@/utils/format';
 
 interface ActiveTypeFiltersProps {
-  types: string[];
+  types: PokemonType[];
   /** Called with the type to drop from the selection. */
-  onRemove: (type: string) => void;
+  onRemove: (type: PokemonType) => void;
 }
 
 /**

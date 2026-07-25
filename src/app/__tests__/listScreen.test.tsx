@@ -95,6 +95,48 @@ describe('List screen', () => {
     expect(getApi().requests.some((url) => url.includes('offset=24&limit=24'))).toBe(false);
   }, TIMEOUT);
 
+  it('refetches only the first page on pull-to-refresh, however deep the list is', async () => {
+    renderApp();
+    await screen.findByText('Bulbasaur', {}, SETTLE);
+
+    scrollToEnd();
+    await waitFor(
+      () => expect(getApi().requests.some((url) => url.includes('offset=24&limit=24'))).toBe(true),
+      SETTLE,
+    );
+
+    await pullToRefresh();
+
+    // Page one came back...
+    await waitFor(
+      () =>
+        expect(
+          getApi().requests.filter((url) => url.includes('offset=0&limit=24')).length,
+        ).toBeGreaterThan(1),
+      SETTLE,
+    );
+    // ...and page two did not, because refresh collapses to the first page
+    // first. Without that, a pull at Pokémon #700 would refetch ~29 pages.
+    expect(getApi().requests.filter((url) => url.includes('offset=24&limit=24'))).toHaveLength(1);
+  }, TIMEOUT);
+
+  it('starts loading the search index when the field takes focus', async () => {
+    renderApp();
+    await screen.findByText('Bulbasaur', {}, SETTLE);
+
+    const NAME_INDEX = 'limit=100000';
+    expect(getApi().requests.some((url) => url.includes(NAME_INDEX))).toBe(false);
+
+    // Focus, not the first keystroke: the ~1300-name index downloads while the
+    // user is still reaching for the keyboard.
+    fireEvent(screen.getByLabelText('Search Pokémon by name or number'), 'focus');
+
+    await waitFor(
+      () => expect(getApi().requests.some((url) => url.includes(NAME_INDEX))).toBe(true),
+      SETTLE,
+    );
+  }, TIMEOUT);
+
   it('refetches the Pokédex on pull-to-refresh', async () => {
     renderApp();
 

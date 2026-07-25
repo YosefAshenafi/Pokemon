@@ -1,10 +1,11 @@
 import type { ReactElement } from 'react';
 import { useCallback } from 'react';
-import { FlatList } from 'react-native';
+import { FlatList, Text } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 
 import type { PokemonTypeIndex } from '@/api/pokeapi';
 import type { PokemonSummary } from '@/api/types';
+import { SEARCH_RESULT_LIMIT } from '@/constants/api';
 import {
   GRID_BOTTOM_PADDING,
   LIST_BATCH_SIZE,
@@ -16,6 +17,12 @@ import {
 
 import { PokemonCard } from './PokemonCard';
 
+/**
+ * Stable identity for "this card has no types". A fresh `[]` per render would
+ * fail `PokemonCard`'s memo comparison and re-render every typeless card.
+ */
+const NO_TYPES: string[] = [];
+
 interface PokemonGridProps {
   data: PokemonSummary[];
   /** `name -> types`; entries arrive in batches as the index builds. */
@@ -26,6 +33,8 @@ interface PokemonGridProps {
   onPrefetch: (name: string) => void;
   onEndReached: () => void;
   loadingMore: boolean;
+  /** Whether matches were left off the end because the render cap was reached. */
+  truncated: boolean;
   /** Omit to disable pull-to-refresh, as search and filter results do. */
   onRefresh?: () => void;
   refreshing: boolean;
@@ -46,6 +55,7 @@ export function PokemonGrid({
   onPrefetch,
   onEndReached,
   loadingMore,
+  truncated,
   onRefresh,
   refreshing,
   empty,
@@ -58,7 +68,7 @@ export function PokemonGrid({
         // The index arrives in batches, so a missing name means "not loaded yet"
         // only while it is fetching; after that it means "no chips to show",
         // otherwise a failed index would leave placeholders forever.
-        types={typesByName?.[item.name] ?? (typesPending ? undefined : [])}
+        types={typesByName?.[item.name] ?? (typesPending ? undefined : NO_TYPES)}
         onPress={onSelect}
         onPressIn={onPrefetch}
       />
@@ -94,6 +104,11 @@ export function PokemonGrid({
             style={{ paddingVertical: SCREEN_PADDING }}
             accessibilityLabel="Loading more Pokémon"
           />
+        ) : truncated ? (
+          // Without this the last row reads as the last match, which it isn't.
+          <Text className="px-6 pt-2 text-center text-xs text-ink-muted">
+            {`Showing the first ${SEARCH_RESULT_LIMIT} matches. Refine your search to narrow them down.`}
+          </Text>
         ) : null
       }
       ListEmptyComponent={empty}

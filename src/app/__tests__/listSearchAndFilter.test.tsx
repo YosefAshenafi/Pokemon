@@ -124,6 +124,25 @@ describe('List screen - type filter', () => {
     await waitFor(() => expect(screen.getByText('Bulbasaur')).toBeTruthy(), SETTLE);
   }, TIMEOUT);
 
+  it('stops the selection at two types, because no Pokémon has a third', async () => {
+    renderApp();
+    await screen.findByText('Bulbasaur', {}, SETTLE);
+
+    openTypeFilter();
+    fireEvent.press(await screen.findByLabelText('Grass type', {}, SETTLE));
+    fireEvent.press(screen.getByLabelText('Poison type'));
+
+    // The remaining chips say why they do nothing, rather than letting a third
+    // selection produce a permanently empty grid.
+    const fire = screen.getByLabelText('Fire type');
+    expect(fire.props.accessibilityState).toMatchObject({ disabled: true });
+
+    fireEvent.press(fire);
+
+    await waitFor(() => expect(screen.getByText('Bulbasaur')).toBeTruthy(), SETTLE);
+    expect(screen.queryByText('Charmander')).toBeNull();
+  }, TIMEOUT);
+
   it('composes search with the type filter', async () => {
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);

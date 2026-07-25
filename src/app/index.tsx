@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
+import type { PokemonType } from '@/api/types';
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { PokemonGrid } from '@/components/PokemonGrid';
@@ -26,6 +27,7 @@ export default function ListScreen() {
       <SearchHeader
         query={dex.query}
         onQueryChange={dex.setQuery}
+        onQueryFocus={dex.prefetchSearchIndex}
         activeTypes={dex.activeTypes}
         onRemoveType={dex.toggleType}
         onOpenFilters={() => setFilterOpen(true)}
@@ -44,13 +46,14 @@ export default function ListScreen() {
           onPrefetch={dex.prefetchDetail}
           onEndReached={dex.loadMore}
           loadingMore={dex.isLoadingMore}
+          truncated={dex.isTruncated}
           refreshing={dex.refreshing}
           onRefresh={dex.isPaginated ? dex.refresh : undefined}
           empty={
             dex.isPaginated ? null : (
               <EmptyState
                 title="No Pokémon found"
-                message={emptyMessage(dex.query, dex.activeTypes)}
+                message={emptyMessage(dex.searchTerm, dex.activeTypes)}
               />
             )
           }
@@ -76,7 +79,7 @@ function errorMessage(isSearching: boolean, isFiltering: boolean): string {
 }
 
 /** Echoes what was actually searched or filtered for, rather than "no results". */
-function emptyMessage(query: string, activeTypes: string[]): string {
+function emptyMessage(query: string, activeTypes: PokemonType[]): string {
   const term = query.trim();
   const typesLabel = activeTypes.map(formatName).join(' & ');
 

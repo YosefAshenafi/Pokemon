@@ -7,17 +7,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
-import { POKEMON_TYPES } from '@/api/types';
+import { POKEMON_TYPES, type PokemonType } from '@/api/types';
 import { STATIC_STALE_TIME } from '@/constants/cache';
+import { MAX_TYPE_FILTERS } from '@/constants/ui';
 import { darkColors, lightColors } from '@/theme/paperTheme';
 import { textColorOn, typeColor } from '@/theme/typeColors';
 import { formatName } from '@/utils/format';
 
 interface TypeFilterSheetProps {
   visible: boolean;
-  activeTypes: string[];
+  activeTypes: PokemonType[];
   /** Toggles a single type in or out of the selection. */
-  onToggle: (type: string) => void;
+  onToggle: (type: PokemonType) => void;
   onClear: () => void;
   onDismiss: () => void;
 }
@@ -117,15 +118,23 @@ export function TypeFilterSheet({
           {POKEMON_TYPES.map((type) => {
             const background = typeColor(type);
             const selected = activeTypes.includes(type);
+            // Two is the ceiling, so past it the only useful action on an
+            // unselected chip is to tell the user why it does nothing.
+            const disabled = !selected && activeTypes.length >= MAX_TYPE_FILTERS;
             return (
               <Pressable
                 key={type}
                 onPress={() => onToggle(type)}
+                disabled={disabled}
                 accessibilityRole="button"
-                accessibilityState={{ selected }}
+                accessibilityState={{ selected, disabled }}
                 accessibilityLabel={`${formatName(type)} type`}
                 accessibilityHint={
-                  selected ? 'Removes this type from the filter' : 'Adds this type to the filter'
+                  disabled
+                    ? 'Deselect another type first - a Pokémon has at most two types.'
+                    : selected
+                      ? 'Removes this type from the filter'
+                      : 'Adds this type to the filter'
                 }
                 style={{
                   backgroundColor: background,
@@ -137,8 +146,9 @@ export function TypeFilterSheet({
                   borderRadius: 999,
                   borderWidth: 2,
                   borderColor: selected ? colors.ink : 'transparent',
-                  // Dim the unselected types once a selection exists.
-                  opacity: !hasSelection || selected ? 1 : 0.6,
+                  // Dim the unselected types once a selection exists, and dim
+                  // the unselectable ones further still.
+                  opacity: disabled ? 0.35 : !hasSelection || selected ? 1 : 0.6,
                 }}
               >
                 {selected ? (

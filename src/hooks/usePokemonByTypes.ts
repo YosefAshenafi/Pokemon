@@ -2,7 +2,7 @@ import { useQueries, type UseQueryResult } from '@tanstack/react-query';
 
 import { getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
-import type { PokemonSummary, TypeMember } from '@/api/types';
+import type { PokemonSummary, PokemonType, TypeMember } from '@/api/types';
 import { STATIC_STALE_TIME } from '@/constants/cache';
 
 export interface TypeFilterResult {
@@ -39,7 +39,7 @@ function combineTypeResults(results: UseQueryResult<TypeMember[], Error>[]): Typ
  * An empty selection yields an empty, non-loading result. These are the same
  * cache entries the type index builds from, so a type is downloaded once.
  */
-export function usePokemonByTypes(types: string[]): TypeFilterResult {
+export function usePokemonByTypes(types: PokemonType[]): TypeFilterResult {
   return useQueries({
     queries: types.map((type) => ({
       queryKey: queryKeys.type(type),

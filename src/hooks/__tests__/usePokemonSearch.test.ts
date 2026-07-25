@@ -40,4 +40,20 @@ describe('searchPokemonIndex', () => {
   it('finds a single Pokémon by its exact number', () => {
     expect(names(searchPokemonIndex(INDEX, '1'))).toEqual(['bulbasaur']);
   });
+
+  // The screen caps what it renders, but it does so *after* intersecting these
+  // results with the type filter. Capping here instead would hand the
+  // intersection a truncated set and let it report "nothing found" for a term
+  // whose matching Pokémon sit further down the ranking.
+  it('returns every match rather than a screenful, so a caller can filter them', () => {
+    const many: PokemonSummary[] = Array.from({ length: 300 }, (_, i) => ({
+      id: i + 1,
+      name: `testmon-a-${i}`,
+    }));
+
+    expect(searchPokemonIndex(many, 'a')).toHaveLength(300);
+    expect(searchPokemonIndex(many, '1')).toHaveLength(
+      many.filter((entry) => String(entry.id).startsWith('1')).length,
+    );
+  });
 });

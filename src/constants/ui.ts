@@ -22,6 +22,14 @@ export const LIST_WINDOW_SIZE = 7;
 /** Fraction of a screen from the end at which the next page is requested. */
 export const LIST_END_REACHED_THRESHOLD = 0.4;
 
+/**
+ * Types selectable at once. The filter keeps Pokémon that have *every* selected
+ * type, and a Pokémon has at most two, so a third selection could only ever
+ * return nothing - the sheet stops there rather than teaching that through an
+ * empty grid.
+ */
+export const MAX_TYPE_FILTERS = 2;
+
 /** Moves shown on the detail screen before the "See all" toggle. */
 export const MOVES_PREVIEW_COUNT = 8;
 
