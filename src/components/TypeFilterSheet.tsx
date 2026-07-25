@@ -1,0 +1,167 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { Pressable, Text, View, useColorScheme } from 'react-native';
+import { Modal, Portal } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { getPokemonByType } from '@/api/pokeapi';
+import { queryKeys } from '@/api/queryKeys';
+import { POKEMON_TYPES, type PokemonType } from '@/api/types';
+import { STATIC_STALE_TIME } from '@/constants/cache';
+import { MAX_TYPE_FILTERS } from '@/constants/ui';
+import { darkColors, lightColors } from '@/theme/paperTheme';
+import { textColorOn, typeColor } from '@/theme/typeColors';
+import { formatName } from '@/utils/format';
+
+interface TypeFilterSheetProps {
+  visible: boolean;
+  activeTypes: PokemonType[];
+  /** Toggles a single type in or out of the selection. */
+  onToggle: (type: PokemonType) => void;
+  onClear: () => void;
+  onDismiss: () => void;
+}
+
+/** Bottom sheet that filters the Pokédex to any combination of types. */
+export function TypeFilterSheet({
+  visible,
+  activeTypes,
+  onToggle,
+  onClear,
+  onDismiss,
+}: TypeFilterSheetProps) {
+  const isDark = useColorScheme() === 'dark';
+  const colors = isDark ? darkColors : lightColors;
+  const insets = useSafeAreaInsets();
+  const hasSelection = activeTypes.length > 0;
+  const queryClient = useQueryClient();
+
+  // Warm every type when the sheet opens so tapping one filters instantly. The
+  // type index has usually filled these keys already, so this rarely fetches.
+  useEffect(() => {
+    if (!visible) return;
+    for (const type of POKEMON_TYPES) {
+      queryClient.prefetchQuery({
+        queryKey: queryKeys.type(type),
+        queryFn: () => getPokemonByType(type),
+        staleTime: STATIC_STALE_TIME,
+      });
+    }
+  }, [visible, queryClient]);
+
+  return (
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={onDismiss}
+        // Drop Paper's safe-area marginBottom; paddingBottom handles the inset.
+        style={{ justifyContent: 'flex-end', marginBottom: 0 }}
+        contentContainerStyle={{
+          backgroundColor: colors.surface,
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: insets.bottom + 24,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+      >
+        <View style={{ alignItems: 'center', marginBottom: 14 }}>
+          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.track }} />
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink }}>Filter by type</Text>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Pressable
+              onPress={onClear}
+              disabled={!hasSelection}
+              accessibilityRole="button"
+              accessibilityLabel="Clear type filter"
+              accessibilityState={{ disabled: !hasSelection }}
+              hitSlop={8}
+              style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: hasSelection ? colors.accent : colors.inkSubtle,
+                }}
+              >
+                Clear
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={onDismiss}
+              accessibilityRole="button"
+              accessibilityLabel="Close filters"
+              hitSlop={8}
+              style={{ padding: 4 }}
+            >
+              <MaterialCommunityIcons name="close" size={22} color={colors.inkMuted} />
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={{ height: 1, backgroundColor: colors.line, marginBottom: 16 }} />
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {POKEMON_TYPES.map((type) => {
+            const background = typeColor(type);
+            const selected = activeTypes.includes(type);
+            // Two is the ceiling, so past it the only useful action on an
+            // unselected chip is to tell the user why it does nothing.
+            const disabled = !selected && activeTypes.length >= MAX_TYPE_FILTERS;
+            return (
+              <Pressable
+                key={type}
+                onPress={() => onToggle(type)}
+                disabled={disabled}
+                accessibilityRole="button"
+                accessibilityState={{ selected, disabled }}
+                accessibilityLabel={`${formatName(type)} type`}
+                accessibilityHint={
+                  disabled
+                    ? 'Deselect another type first - a Pokémon has at most two types.'
+                    : selected
+                      ? 'Removes this type from the filter'
+                      : 'Adds this type to the filter'
+                }
+                style={{
+                  backgroundColor: background,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 16,
+                  paddingVertical: 9,
+                  borderRadius: 999,
+                  borderWidth: 2,
+                  borderColor: selected ? colors.ink : 'transparent',
+                  // Dim the unselected types once a selection exists, and dim
+                  // the unselectable ones further still.
+                  opacity: disabled ? 0.35 : !hasSelection || selected ? 1 : 0.6,
+                }}
+              >
+                {selected ? (
+                  <MaterialCommunityIcons name="check" size={15} color={textColorOn(background)} />
+                ) : null}
+                <Text style={{ color: textColorOn(background), fontSize: 13, fontWeight: '700' }}>
+                  {formatName(type)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Modal>
+    </Portal>
+  );
+}
