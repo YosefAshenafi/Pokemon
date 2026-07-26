@@ -31,3 +31,9 @@ jobs:
       # untested line as readily as on a failing assertion.
       - name: Test
         run: npm test -- --ci
+
+      # A dependency that quietly doubles the bundle is not something the other
+      # steps can see. The ceiling is the measured baseline plus headroom, so it
+      # catches a step change rather than nagging about ordinary growth.
+      - name: Check bundle size
+        run: npm run bundle:check

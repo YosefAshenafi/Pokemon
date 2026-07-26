@@ -50,10 +50,11 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "bundle:check": "node scripts/check-bundle-size.mjs"
   },
   "private": true,
-  "description": "Pokédex — Expo take-home assessment",
+  "description": "Pok\u00e9dex \u2014 Expo take-home assessment",
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": [

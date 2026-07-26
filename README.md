@@ -76,7 +76,17 @@ npm run lint           # ESLint
 
 Measured across every file in `src/`, not only the ones tests happen to import. `coverageThreshold` enforces 100% on all four metrics.
 
-All three commands run on every push and pull request via [GitHub Actions](.github/workflows/ci.yml), so an untested line fails the build as readily as a failing assertion.
+All three commands run on every push and pull request via [GitHub Actions](.github/workflows/ci.yml), so an untested line fails the build as readily as a failing assertion. CI also runs `npm run bundle:check`, which exports the Android bundle and fails if it crosses 6 MB — a dependency that doubles the download is invisible to the other three.
+
+### Measured
+
+| What | Value |
+| ---- | ----- |
+| Android JS bundle (Hermes bytecode) | 4.98 MB, against a 6 MB CI ceiling |
+| Zod parse of the 1302-entry name index | 0.25 ms |
+
+Everything else in the Performance section below is reasoned, not measured — the list
+tuning and the prefetch window have not been profiled on a device.
 
 ### No mocking of application code
 
@@ -109,6 +119,25 @@ src/
   utils/               # Pure formatting helpers (unit-tested)
   test/                # Test harness: the fake PokeAPI, app renderer, appearance & press helpers, CSS stub
 ```
+
+## Observability
+
+Failures are reported through one seam, `src/api/reportError.ts`, called from three
+places: the query cache (every failed query), the route error boundary (any render that
+throws), and nothing else. **No reporter is installed** — `reportError` is a no-op until
+`setErrorReporter` is called, which is deliberate: the call sites are the part that is
+awkward to retrofit and they are in place, so adopting a vendor is one line in
+`src/app/_layout.tsx`:
+
+```ts
+import * as Sentry from '@sentry/react-native';
+setErrorReporter((error, context) => Sentry.captureException(error, { extra: context }));
+```
+
+Reporting is filtered by `ApiError.kind`. A dropped connection or a timeout is not a
+defect and is not reported — the type index alone would send nineteen of them from one
+offline launch. What is reported is the class of failure that means the API moved:
+a response that will not parse, or one that no longer matches its schema.
 
 ## Performance
 
