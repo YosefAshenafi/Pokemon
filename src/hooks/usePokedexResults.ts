@@ -1,8 +1,6 @@
-import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
-import type { PokemonPage, PokemonTypeIndex } from '@/api/pokeapi';
-import { queryKeys } from '@/api/queryKeys';
+import type { PokemonTypeIndex } from '@/api/pokeapi';
 import type { PokemonSummary } from '@/api/types';
 import { SEARCH_RESULT_LIMIT } from '@/constants/api';
 
@@ -33,11 +31,6 @@ export interface PokedexResults {
   /** `name -> types`, or `undefined` for a name the index hasn't reached yet. */
   typesByName: PokemonTypeIndex | undefined;
   typesPending: boolean;
-  isPaginated: boolean;
-  isLoadingMore: boolean;
-  loadMore: () => void;
-  refreshing: boolean;
-  refresh: () => Promise<void>;
 }
 
 /**
@@ -56,9 +49,6 @@ export function usePokedexResults({
   isSearching,
   isFiltering,
 }: PokedexQuery): PokedexResults {
-  const queryClient = useQueryClient();
-  const [refreshing, setRefreshing] = useState(false);
-
   const list = usePokemonList();
   const search = usePokemonSearch(searchTerm);
   const typeList = usePokemonByTypes(activeTypes);
@@ -98,40 +88,6 @@ export function usePokedexResults({
     (isFiltering && typeList.isLoading) ||
     (!isSearching && !isFiltering && list.isLoading);
 
-  // Paging applies to the Pokédex only; search and filter resolve client-side
-  // from lists that are already whole.
-  const isPaginated = !isSearching && !isFiltering;
-  const isLoadingMore = isPaginated && list.isFetchingNextPage;
-
-  const loadMore = useCallback(() => {
-    if (isPaginated && list.hasNextPage && !list.isFetchingNextPage) {
-      list.fetchNextPage();
-    }
-  }, [isPaginated, list]);
-
-  const refresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      // Collapse to page one first. `refetch()` on an infinite query refetches
-      // every page currently loaded, so pulling after a deep scroll would fire
-      // one request per page. The gesture means "give me the top of the list
-      // again", which is exactly one request.
-      queryClient.setQueryData<InfiniteData<PokemonPage, number>>(queryKeys.list, (cached) =>
-        cached
-          ? { pages: cached.pages.slice(0, 1), pageParams: cached.pageParams.slice(0, 1) }
-          : cached,
-      );
-      // staleTime: Infinity means the index never refetches on its own, so this
-      // is how a failed or partially failed one recovers. Cached types don't
-      // refetch.
-      await Promise.all([list.refetch(), typeIndex.refetch()]);
-    } finally {
-      // In a `finally` so the spinner cannot outlive the request, whatever the
-      // queries' `throwOnError` is later configured to do.
-      setRefreshing(false);
-    }
-  }, [queryClient, list, typeIndex]);
-
   const retry = useCallback(() => {
     if (isSearching) search.refetch();
     if (isFiltering) typeList.refetch();
@@ -147,10 +103,5 @@ export function usePokedexResults({
     retry,
     typesByName: typeIndex.data,
     typesPending: typeIndex.isFetching,
-    isPaginated,
-    isLoadingMore,
-    loadMore,
-    refreshing,
-    refresh,
   };
 }
