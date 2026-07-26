@@ -8,7 +8,6 @@ import {
 } from '@/constants/api';
 import { idFromUrl } from '@/utils/format';
 
-import { reportError } from './reportError';
 import {
   POKEMON_TYPES,
   moveSchema,
@@ -24,16 +23,44 @@ import type {
   TypeMember,
 } from './types';
 
+/**
+ * Why a request failed, as data rather than as prose.
+ *
+ * The distinction that matters downstream is whether a failure says something
+ * about *us*: `network` and `timeout` mean a user is on a train, and there are
+ * millions of those; `contract` and `unreadable` mean the API changed under us
+ * and somebody needs to know today.
+ */
+export type ApiErrorKind = 'network' | 'timeout' | 'http' | 'unreadable' | 'contract';
+
 export class ApiError extends Error {
+  readonly kind: ApiErrorKind;
+  readonly status?: number;
+
   constructor(
     message: string,
-    readonly status?: number,
-    /** The underlying failure, kept so a report carries more than our wording. */
-    options?: { cause?: unknown },
+    options: {
+      kind: ApiErrorKind;
+      status?: number;
+      /** The underlying failure, kept so a report carries more than our wording. */
+      cause?: unknown;
+    },
   ) {
-    super(message, options);
+    super(message, { cause: options.cause });
     this.name = 'ApiError';
+    this.kind = options.kind;
+    this.status = options.status;
   }
+}
+
+/**
+ * Whether a failure is worth reporting. A dropped connection is the user's
+ * network telling us nothing we can act on, and the type index alone would
+ * send nineteen of them from a single offline launch.
+ */
+export function isReportableError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return true;
+  return error.kind !== 'network' && error.kind !== 'timeout';
 }
 
 /**
@@ -64,19 +91,19 @@ async function fetchJson<T>(
         signal: controller.signal,
       });
     } catch (cause) {
+      const timedOut = controller.signal.aborted;
       throw new ApiError(
-        controller.signal.aborted
+        timedOut
           ? 'The request timed out. Check your connection and try again.'
           : 'Network request failed. Check your connection and try again.',
-        undefined,
-        { cause },
+        { kind: timedOut ? 'timeout' : 'network', cause },
       );
     }
 
     if (!response.ok) {
       throw new ApiError(
         response.status === 404 ? notFoundMessage : `PokeAPI request failed (${response.status}).`,
-        response.status,
+        { kind: 'http', status: response.status },
       );
     }
 
@@ -87,17 +114,16 @@ async function fetchJson<T>(
     try {
       body = await response.json();
     } catch (cause) {
-      throw new ApiError('The server sent a response that could not be read.', undefined, {
+      throw new ApiError('The server sent a response that could not be read.', {
+        kind: 'unreadable',
         cause,
       });
     }
 
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
-      // Worth hearing about: this means the contract moved, not that a user is
-      // offline, and every other error path is already visible to us as a 4xx.
-      reportError(parsed.error, { path });
-      throw new ApiError('The server sent data in an unexpected format.', undefined, {
+      throw new ApiError('The server sent data in an unexpected format.', {
+        kind: 'contract',
         cause: parsed.error,
       });
     }
@@ -212,7 +238,9 @@ export async function buildPokemonTypeIndex(
   }
 
   if (loaded === 0) {
-    throw new ApiError('Pokémon types could not be loaded. Check your connection and try again.');
+    throw new ApiError('Pokémon types could not be loaded. Check your connection and try again.', {
+      kind: 'network',
+    });
   }
   return toIndex(slotted);
 }

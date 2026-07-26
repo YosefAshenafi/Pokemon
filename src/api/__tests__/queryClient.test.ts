@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { ApiError } from '../pokeapi';
 import { purgeLegacyCacheKeys, queryClient } from '../queryClient';
 import { queryKeys } from '../queryKeys';
+import { setErrorReporter } from '../reportError';
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -59,5 +61,52 @@ describe('queryClient defaults', () => {
     // Pokémon detail is ~200 KB and must never reach AsyncStorage.
     expect(queryKeys.detail('bulbasaur')).toEqual(['pokemon', 'detail', 'bulbasaur']);
     expect(queryKeys.move('tackle')).toEqual(['move', 'detail', 'tackle']);
+  });
+});
+
+describe('query failure reporting', () => {
+  afterEach(() => {
+    setErrorReporter(null);
+  });
+
+  async function failWith(error: unknown) {
+    const reporter = jest.fn();
+    setErrorReporter(reporter);
+    await queryClient
+      .fetchQuery({
+        queryKey: ['reporting-probe'],
+        queryFn: () => Promise.reject(error),
+        retry: false,
+      })
+      .catch(() => {});
+    return reporter;
+  }
+
+  it('reports a contract mismatch, which no status code would tell us about', async () => {
+    const reporter = await failWith(
+      new ApiError('The server sent data in an unexpected format.', { kind: 'contract' }),
+    );
+
+    expect(reporter).toHaveBeenCalledWith(
+      expect.any(ApiError),
+      expect.objectContaining({ queryKey: ['reporting-probe'] }),
+    );
+  });
+
+  it('stays quiet about a dropped connection', async () => {
+    // Otherwise one offline launch sends nineteen reports - one per type in the
+    // index - none of which describe anything we could fix.
+    const reporter = await failWith(
+      new ApiError('Network request failed.', { kind: 'network' }),
+    );
+
+    expect(reporter).not.toHaveBeenCalled();
+  });
+
+  it('reports an error that did not come from the API client at all', async () => {
+    // An unrecognised failure is a bug until proven otherwise.
+    const reporter = await failWith(new TypeError('undefined is not a function'));
+
+    expect(reporter).toHaveBeenCalled();
   });
 });

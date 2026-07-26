@@ -11,6 +11,7 @@ import {
   QUERY_RETRY_COUNT,
 } from '@/constants/cache';
 
+import { isReportableError } from './pokeapi';
 import { isPersistedQueryKey } from './queryKeys';
 import { reportError } from './reportError';
 
@@ -37,8 +38,14 @@ export const queryClient = new QueryClient({
   // Every query failure passes through here after its retries are spent, so a
   // reporter installed once covers the whole app - present hooks and future
   // ones alike - rather than needing an onError per call site.
+  //
+  // Filtered, though: a dropped connection is not a defect, and the type index
+  // alone would send nineteen reports from one offline launch. What is kept is
+  // the class of failure that means the API moved under us.
   queryCache: new QueryCache({
-    onError: (error, query) => reportError(error, { queryKey: query.queryKey }),
+    onError: (error, query) => {
+      if (isReportableError(error)) reportError(error, { queryKey: query.queryKey });
+    },
   }),
   defaultOptions: {
     queries: {

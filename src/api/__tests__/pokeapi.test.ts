@@ -6,7 +6,6 @@ import {
   getPokemonByType,
   getPokemonPage,
 } from '../pokeapi';
-import { setErrorReporter } from '../reportError';
 import { POKEMON_TYPES, type TypeMember } from '../types';
 
 const BASE = 'https://pokeapi.co/api/v2';
@@ -182,18 +181,21 @@ describe('getPokemon', () => {
     expect(error.message).toMatch(/unexpected format/i);
   });
 
-  it('reports a contract mismatch, since no 4xx will tell us about it', async () => {
-    const reporter = jest.fn();
-    setErrorReporter(reporter);
+  it('labels each failure with why it happened, not just what to show', async () => {
+    // The kind is what lets a caller tell "the user is on a train" from "the
+    // API changed shape", which read identically as messages.
+    mockFetch.mockRejectedValueOnce(new TypeError('Network request failed'));
+    const network = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
+    expect(network.kind).toBe('network');
+
+    mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
+    const http = (await getPokemon('missingno').catch((e: unknown) => e)) as ApiError;
+    expect(http.kind).toBe('http');
+    expect(http.status).toBe(404);
+
     mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody({ id: 'twenty-five' })));
-
-    await expect(getPokemon('pikachu')).rejects.toBeInstanceOf(ApiError);
-
-    expect(reporter).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ path: '/pokemon/pikachu' }),
-    );
-    setErrorReporter(null);
+    const contract = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
+    expect(contract.kind).toBe('contract');
   });
 
   it('drops fields the app does not use, so a detail is not cached whole', async () => {

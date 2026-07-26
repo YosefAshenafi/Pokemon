@@ -89,10 +89,16 @@ export function PokemonGrid({
   // Cards are a fixed size at a given font scale, so the list never has to
   // measure a row: this is what keeps a fast fling from leaving blank cells.
   // It is only sound because the card renders from the same `CARD_METRICS`.
+  //
+  // `index` is a ROW index, not an item index. With `numColumns` above 1,
+  // FlatList reports `ceil(items / numColumns)` to VirtualizedList and hands it
+  // an array per row, but passes `getItemLayout` straight through - so dividing
+  // by the column count here would report half the real offset and overlap
+  // every row.
   const getItemLayout = useCallback(
     (_: ArrayLike<PokemonSummary> | null | undefined, index: number) => ({
       length: rowHeight,
-      offset: Math.floor(index / COLUMNS) * rowHeight,
+      offset: index * rowHeight,
       index,
     }),
     [rowHeight],

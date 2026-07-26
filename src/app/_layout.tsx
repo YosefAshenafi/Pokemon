@@ -44,7 +44,13 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? darkColors : lightColors;
 
-  reportError(error, { boundary: 'root' });
+  // In an effect, not in the render body: React may render a component more
+  // than once for a single error - in development, and whenever it re-renders
+  // for an unrelated reason such as the colour scheme changing - and each of
+  // those would otherwise be a duplicate report.
+  useEffect(() => {
+    reportError(error, { boundary: 'root' });
+  }, [error]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
