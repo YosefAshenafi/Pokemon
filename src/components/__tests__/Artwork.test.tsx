@@ -48,6 +48,18 @@ describe('Artwork', () => {
     expect(screen.getByLabelText('Bulbasaur, no artwork available')).toBeTruthy();
   });
 
+  it('loads a resized thumbnail when asked, with the full artwork as its fallback', () => {
+    render(<Artwork id={1} alt="Bulbasaur" thumbWidth={288} />);
+
+    expect(source()).toContain('wsrv.nl');
+    expect(source()).toContain('&w=288');
+
+    fireEvent(screen.getByTestId('pokemon-artwork'), 'error', { nativeEvent: { error: 'cdn down' } });
+
+    expect(source()).toContain('raw.githubusercontent.com');
+    expect(source()).toContain('official-artwork/1.png');
+  });
+
   it('prefers the sprite URLs on a loaded detail over ones built from the id', () => {
     render(
       <Artwork

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 
 import type { Pokemon } from '@/api/types';
-import { artworkUrl, spriteUrl } from '@/utils/format';
+import { artworkThumbUrl, artworkUrl, spriteUrl } from '@/utils/format';
 
 import { Pokeball } from './Pokeball';
 
@@ -14,6 +14,7 @@ interface ArtworkProps {
   style?: { width?: number; height?: number; marginTop?: number };
   pokemon?: Pokemon;
   placeholderSize?: number;
+  thumbWidth?: number;
 }
 
 const PLACEHOLDER_COLOR = 'rgba(154, 160, 181, 0.4)';
@@ -26,13 +27,16 @@ export function Artwork({
   style,
   pokemon,
   placeholderSize = 56,
+  thumbWidth,
 }: ArtworkProps) {
   const [failures, setFailures] = useState(0);
 
   const candidates = (
     pokemon
       ? [pokemon.sprites.other?.['official-artwork']?.front_default, pokemon.sprites.front_default]
-      : [artworkUrl(id), spriteUrl(id)]
+      : thumbWidth
+        ? [artworkThumbUrl(id, thumbWidth), artworkUrl(id), spriteUrl(id)]
+        : [artworkUrl(id), spriteUrl(id)]
   ).filter((url): url is string => Boolean(url));
 
   const source = candidates[failures];

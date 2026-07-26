@@ -1,16 +1,16 @@
-import { SPRITE_BASE_URL } from '@/constants/api';
+import { SPRITE_BASE_URL } from "@/constants/api";
 
 /** `1` → `#001`, `1025` → `#1025` */
 export function formatPokemonId(id: number): string {
-  return `#${String(id).padStart(3, '0')}`;
+  return `#${String(id).padStart(3, "0")}`;
 }
 
 /** `"mr-mime"` → `"Mr Mime"` */
 export function formatName(name: string): string {
   return name
-    .split('-')
+    .split("-")
     .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
-    .join(' ');
+    .join(" ");
 }
 
 /** PokeAPI height is in decimetres. `7` → `"0.7 m"` */
@@ -27,7 +27,7 @@ export function formatHeightFeetInches(decimetres: number): string {
     feet += 1;
     inches = 0;
   }
-  return `${feet}'${String(inches).padStart(2, '0')}"`;
+  return `${feet}'${String(inches).padStart(2, "0")}"`;
 }
 
 /** PokeAPI weight is in hectograms. `69` → `"6.9 kg"` */
@@ -56,19 +56,27 @@ export function spriteUrl(id: number): string {
   return `${SPRITE_BASE_URL}/${id}.png`;
 }
 
+export function artworkThumbUrl(id: number, width: number): string {
+  const source = artworkUrl(id).replace("https://", "");
+  return `https://wsrv.nl/?url=${encodeURIComponent(source)}&w=${width}&output=webp`;
+}
+
 /** Fills PokeAPI's `$effect_chance` placeholder in move effect text. */
-export function formatEffectText(text: string, effectChance: number | null): string {
+export function formatEffectText(
+  text: string,
+  effectChance: number | null,
+): string {
   if (effectChance === null) return text;
   return text.replace(/\$effect_chance/g, String(effectChance));
 }
 
 const STAT_LABELS: Record<string, string> = {
-  hp: 'HP',
-  attack: 'Attack',
-  defense: 'Defense',
-  'special-attack': 'Sp. Atk',
-  'special-defense': 'Sp. Def',
-  speed: 'Speed',
+  hp: "HP",
+  attack: "Attack",
+  defense: "Defense",
+  "special-attack": "Sp. Atk",
+  "special-defense": "Sp. Def",
+  speed: "Speed",
 };
 
 export function formatStatName(stat: string): string {

@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { PixelRatio, Pressable, Text, View } from 'react-native';
 
 import { CARD_MAX_FONT_SCALE, CARD_METRICS } from '@/constants/ui';
 import { formatName, formatPokemonId } from '@/utils/format';
@@ -42,8 +42,6 @@ export const PokemonCard = memo(function PokemonCard({
       accessibilityLabel={`${formatName(name)}, ${formatPokemonId(id)}`}
       accessibilityHint="Opens details"
       className="w-[48%] rounded-2xl border border-line bg-surface"
-      // A plain object, never a function: NativeWind rewrites `style` to inject
-      // the className rules, and a function nested in that array is dropped.
       style={{
         padding: CARD_METRICS.padding,
         marginBottom: CARD_METRICS.rowGap,
@@ -78,6 +76,7 @@ export const PokemonCard = memo(function PokemonCard({
         className="w-full"
         style={{ height: CARD_METRICS.artwork, marginTop: CARD_METRICS.gap }}
         placeholderSize={56}
+        thumbWidth={PixelRatio.getPixelSizeForLayoutSize(CARD_METRICS.artwork)}
       />
 
       <View

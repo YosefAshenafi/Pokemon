@@ -1,4 +1,5 @@
 import {
+  artworkThumbUrl,
   artworkUrl,
   formatEffectText,
   formatHeightFeetInches,
@@ -89,6 +90,14 @@ describe('spriteUrl', () => {
   it('points at the small default sprite', () => {
     expect(spriteUrl(10033)).toBe(
       'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/10033.png',
+    );
+  });
+});
+
+describe('artworkThumbUrl', () => {
+  it('asks the resizing CDN for the artwork at the given width', () => {
+    expect(artworkThumbUrl(1, 288)).toBe(
+      'https://wsrv.nl/?url=raw.githubusercontent.com%2FPokeAPI%2Fsprites%2Fmaster%2Fsprites%2Fpokemon%2Fother%2Fofficial-artwork%2F1.png&w=288&output=webp',
     );
   });
 });
