@@ -6,8 +6,10 @@ import {
   getPokemonByType,
   getPokemonPage,
 } from '../pokeapi';
+import { setErrorReporter } from '../reportError';
 import { POKEMON_TYPES, type TypeMember } from '../types';
 
+const BASE = 'https://pokeapi.co/api/v2';
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
 
@@ -26,6 +28,44 @@ function jsonResponse(body: unknown, status = 200) {
     status,
     json: () => Promise.resolve(body),
   } as Response;
+}
+
+/**
+ * A complete `/pokemon` body. Responses are validated against the schema now,
+ * so a stub has to be a real one - a partial object is exactly what the client
+ * is supposed to reject.
+ */
+function pokemonBody(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 25,
+    name: 'pikachu',
+    height: 4,
+    weight: 60,
+    types: [{ slot: 1, type: { name: 'electric', url: `${BASE}/type/electric/` } }],
+    stats: [{ base_stat: 35, stat: { name: 'hp', url: `${BASE}/stat/1/` } }],
+    moves: [{ move: { name: 'tackle', url: `${BASE}/move/33/` } }],
+    sprites: {
+      front_default: 'https://example.test/25.png',
+      other: { 'official-artwork': { front_default: 'https://example.test/art/25.png' } },
+    },
+    ...overrides,
+  };
+}
+
+/** A complete `/move` body, for the same reason. */
+function moveBody(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 22,
+    name: 'vine-whip',
+    accuracy: 100,
+    power: 45,
+    pp: 25,
+    effect_chance: null,
+    type: { name: 'grass', url: `${BASE}/type/grass/` },
+    damage_class: { name: 'physical', url: `${BASE}/move-damage-class/2/` },
+    effect_entries: [],
+    ...overrides,
+  };
 }
 
 describe('getPokemonPage', () => {
@@ -82,7 +122,7 @@ describe('getPokemonPage', () => {
 
 describe('getPokemon', () => {
   it('normalizes the name before requesting', async () => {
-    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 25, name: 'pikachu' }));
+    mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody()));
 
     await getPokemon('  Pikachu ');
 
@@ -130,11 +170,48 @@ describe('getPokemon', () => {
     expect(error.message).toMatch(/could not be read/i);
     expect(error.cause).toBe(invalid);
   });
+
+  it('rejects a well-formed response whose shape does not match the contract', async () => {
+    // Valid JSON, wrong shape: the case an `as Pokemon` cast would wave through
+    // and turn into a crash inside the detail screen's `stats.map`.
+    mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody({ stats: undefined })));
+
+    const error = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toMatch(/unexpected format/i);
+  });
+
+  it('reports a contract mismatch, since no 4xx will tell us about it', async () => {
+    const reporter = jest.fn();
+    setErrorReporter(reporter);
+    mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody({ id: 'twenty-five' })));
+
+    await expect(getPokemon('pikachu')).rejects.toBeInstanceOf(ApiError);
+
+    expect(reporter).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ path: '/pokemon/pikachu' }),
+    );
+    setErrorReporter(null);
+  });
+
+  it('drops fields the app does not use, so a detail is not cached whole', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(pokemonBody({ game_indices: [{ game_index: 84 }], order: 35 })),
+    );
+
+    const pokemon = await getPokemon('pikachu');
+
+    expect(pokemon).not.toHaveProperty('game_indices');
+    expect(pokemon).not.toHaveProperty('order');
+    expect(pokemon.name).toBe('pikachu');
+  });
 });
 
 describe('request safety', () => {
   it('sends every request to the pinned HTTPS origin only', async () => {
-    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 25, name: 'pikachu' }));
+    mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody()));
 
     await getPokemon('pikachu');
 
@@ -193,7 +270,7 @@ describe('request safety', () => {
   it('clears the timeout once a request succeeds, leaving no pending timers', async () => {
     jest.useFakeTimers();
     try {
-      mockFetch.mockResolvedValueOnce(jsonResponse({ id: 25, name: 'pikachu' }));
+      mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody()));
 
       await getPokemon('pikachu');
 
@@ -322,7 +399,7 @@ describe('buildPokemonTypeIndex', () => {
 
 describe('getMove', () => {
   it('normalizes the name before requesting', async () => {
-    mockFetch.mockResolvedValueOnce(jsonResponse({ id: 22, name: 'vine-whip' }));
+    mockFetch.mockResolvedValueOnce(jsonResponse(moveBody()));
 
     await getMove(' Vine-Whip ');
 

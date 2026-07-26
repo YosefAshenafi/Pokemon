@@ -15,6 +15,7 @@ import { PaperProvider } from 'react-native-paper';
 import { darkColors, lightColors, paperDarkTheme, paperLightTheme } from '@/theme/paperTheme';
 
 import { purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
+import { reportError } from '@/api/reportError';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
 import { ErrorState } from '@/components/ErrorState';
 import { CACHE_MIGRATION_KEY } from '@/constants/cache';
@@ -36,12 +37,14 @@ const paperSettings = {
  * the last stop for a shape the client validated too loosely - without it, one
  * unexpected field is a white screen with no way back.
  *
- * React has already logged the error by the time this renders; a crash reporter
- * would be wired in here.
+ * React logs the error itself before this renders; `reportError` is what sends
+ * it somewhere we can see it from a device we don't own.
  */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? darkColors : lightColors;
+
+  reportError(error, { boundary: 'root' });
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>

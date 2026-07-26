@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+
 import {
   PAGE_SIZE,
   POKEAPI_BASE_URL,
@@ -6,14 +8,20 @@ import {
 } from '@/constants/api';
 import { idFromUrl } from '@/utils/format';
 
-import { POKEMON_TYPES } from './types';
+import { reportError } from './reportError';
+import {
+  POKEMON_TYPES,
+  moveSchema,
+  pokemonListResponseSchema,
+  pokemonSchema,
+  typeResponseSchema,
+} from './types';
 import type {
   Move,
   Pokemon,
   PokemonListResponse,
   PokemonSummary,
   TypeMember,
-  TypeResponse,
 } from './types';
 
 export class ApiError extends Error {
@@ -33,8 +41,18 @@ export class ApiError extends Error {
  * path, never a full URL, so the HTTPS origin above is the only host this client
  * can ever reach; all interpolated segments are `encodeURIComponent`-escaped by
  * the callers so a name can never break out of its path.
+ *
+ * The body is *parsed* against `schema` rather than cast. A third party can
+ * change a field without telling us, and an unchecked cast turns that into a
+ * crash inside a render; parsing turns it into an ordinary, retryable error
+ * that the screen already knows how to show, and reports it so we hear about
+ * it before a user does.
  */
-async function fetchJson<T>(path: string, notFoundMessage = 'Pokémon not found.'): Promise<T> {
+async function fetchJson<T>(
+  path: string,
+  schema: z.ZodType<T>,
+  notFoundMessage = 'Pokémon not found.',
+): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -65,13 +83,25 @@ async function fetchJson<T>(path: string, notFoundMessage = 'Pokémon not found.
     // A 200 carrying a proxy's HTML error page parses as a SyntaxError, not a
     // network failure. Converting it here keeps every failure out of this
     // client shaped like an ApiError, so no caller has to render a raw one.
+    let body: unknown;
     try {
-      return (await response.json()) as T;
+      body = await response.json();
     } catch (cause) {
       throw new ApiError('The server sent a response that could not be read.', undefined, {
         cause,
       });
     }
+
+    const parsed = schema.safeParse(body);
+    if (!parsed.success) {
+      // Worth hearing about: this means the contract moved, not that a user is
+      // offline, and every other error path is already visible to us as a 4xx.
+      reportError(parsed.error, { path });
+      throw new ApiError('The server sent data in an unexpected format.', undefined, {
+        cause: parsed.error,
+      });
+    }
+    return parsed.data;
   } finally {
     clearTimeout(timeout);
   }
@@ -94,7 +124,10 @@ export interface PokemonPage {
 
 /** One page of the Pokédex, in National Dex order. */
 export async function getPokemonPage(offset: number): Promise<PokemonPage> {
-  const data = await fetchJson<PokemonListResponse>(`/pokemon?offset=${offset}&limit=${PAGE_SIZE}`);
+  const data = await fetchJson(
+    `/pokemon?offset=${offset}&limit=${PAGE_SIZE}`,
+    pokemonListResponseSchema,
+  );
   const nextOffset = data.next ? offset + PAGE_SIZE : null;
   return { pokemon: toSummaries(data.results), count: data.count, nextOffset };
 }
@@ -102,7 +135,7 @@ export async function getPokemonPage(offset: number): Promise<PokemonPage> {
 /** Full detail for a single Pokémon by name or numeric id. */
 export function getPokemon(nameOrId: string | number): Promise<Pokemon> {
   const key = String(nameOrId).trim().toLowerCase();
-  return fetchJson<Pokemon>(`/pokemon/${encodeURIComponent(key)}`);
+  return fetchJson(`/pokemon/${encodeURIComponent(key)}`, pokemonSchema);
 }
 
 /**
@@ -111,8 +144,9 @@ export function getPokemon(nameOrId: string | number): Promise<Pokemon> {
  */
 export async function getPokemonByType(type: string): Promise<TypeMember[]> {
   const key = type.trim().toLowerCase();
-  const data = await fetchJson<TypeResponse>(
+  const data = await fetchJson(
     `/type/${encodeURIComponent(key)}`,
+    typeResponseSchema,
     'Type not found.',
   );
   return data.pokemon
@@ -186,7 +220,7 @@ export async function buildPokemonTypeIndex(
 /** Full detail for a single move by name or numeric id. */
 export function getMove(nameOrId: string | number): Promise<Move> {
   const key = String(nameOrId).trim().toLowerCase();
-  return fetchJson<Move>(`/move/${encodeURIComponent(key)}`, 'Move not found.');
+  return fetchJson(`/move/${encodeURIComponent(key)}`, moveSchema, 'Move not found.');
 }
 
 /**
@@ -194,6 +228,6 @@ export function getMove(nameOrId: string | number): Promise<Move> {
  * search, since PokeAPI has no substring-search endpoint.
  */
 export async function getAllPokemonNames(): Promise<PokemonSummary[]> {
-  const data = await fetchJson<PokemonListResponse>('/pokemon?offset=0&limit=100000');
+  const data = await fetchJson('/pokemon?offset=0&limit=100000', pokemonListResponseSchema);
   return toSummaries(data.results);
 }

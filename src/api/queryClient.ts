@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { experimental_createQueryPersister } from '@tanstack/query-persist-client-core';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 
 import {
   CACHE_BUSTER,
@@ -12,6 +12,7 @@ import {
 } from '@/constants/cache';
 
 import { isPersistedQueryKey } from './queryKeys';
+import { reportError } from './reportError';
 
 /**
  * One AsyncStorage key per query rather than one giant blob, which would hit
@@ -33,6 +34,12 @@ export const persister = experimental_createQueryPersister({
  * without reaching into a screen module.
  */
 export const queryClient = new QueryClient({
+  // Every query failure passes through here after its retries are spent, so a
+  // reporter installed once covers the whole app - present hooks and future
+  // ones alike - rather than needing an onError per call site.
+  queryCache: new QueryCache({
+    onError: (error, query) => reportError(error, { queryKey: query.queryKey }),
+  }),
   defaultOptions: {
     queries: {
       staleTime: DEFAULT_STALE_TIME,

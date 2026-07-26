@@ -1,64 +1,68 @@
 /**
- * Minimal PokeAPI shapes, limited to the fields this app consumes. Only the
- * types a consumer names are exported; the nested field shapes stay local.
+ * The PokeAPI response contracts, as schemas rather than declarations.
+ *
+ * These are parsed at the fetch boundary, not asserted with `as`: PokeAPI is a
+ * third party, and a declaration that turns out to be wrong surfaces as a crash
+ * deep inside a render rather than as an error the screen can show. Each type
+ * below is *inferred* from its schema, so the shape the compiler believes and
+ * the shape actually validated cannot drift apart.
+ *
+ * Only the fields this app consumes are modelled. Unlisted keys are stripped,
+ * which also keeps a ~200 KB Pokémon detail from being cached whole.
  */
+import { z } from 'zod';
 
-interface NamedAPIResource {
-  name: string;
-  url: string;
-}
+const namedResource = z.object({ name: z.string(), url: z.string() });
 
-export interface PokemonListResponse {
-  count: number;
-  next: string | null;
-  results: NamedAPIResource[];
-}
+export const pokemonListResponseSchema = z.object({
+  count: z.number(),
+  next: z.string().nullable(),
+  results: z.array(namedResource),
+});
+export type PokemonListResponse = z.infer<typeof pokemonListResponseSchema>;
 
-export interface TypeResponse {
-  pokemon: { slot: number; pokemon: NamedAPIResource }[];
-}
+export const typeResponseSchema = z.object({
+  pokemon: z.array(z.object({ slot: z.number(), pokemon: namedResource })),
+});
+export type TypeResponse = z.infer<typeof typeResponseSchema>;
 
-interface PokemonSprites {
-  front_default: string | null;
-  other?: {
-    'official-artwork'?: {
-      front_default: string | null;
-    };
-  };
-}
-
-export interface Pokemon {
-  id: number;
-  name: string;
+export const pokemonSchema = z.object({
+  id: z.number(),
+  name: z.string(),
   /** Decimetres */
-  height: number;
+  height: z.number(),
   /** Hectograms */
-  weight: number;
-  types: { slot: number; type: NamedAPIResource }[];
-  stats: { base_stat: number; stat: NamedAPIResource }[];
-  moves: { move: NamedAPIResource }[];
-  sprites: PokemonSprites;
-}
+  weight: z.number(),
+  types: z.array(z.object({ slot: z.number(), type: namedResource })),
+  stats: z.array(z.object({ base_stat: z.number(), stat: namedResource })),
+  moves: z.array(z.object({ move: namedResource })),
+  sprites: z.object({
+    front_default: z.string().nullable(),
+    other: z
+      .object({
+        'official-artwork': z.object({ front_default: z.string().nullable() }).optional(),
+      })
+      .optional(),
+  }),
+});
+export type Pokemon = z.infer<typeof pokemonSchema>;
 
-interface MoveEffectEntry {
-  effect: string;
-  short_effect: string;
-  language: NamedAPIResource;
-}
-
-export interface Move {
-  id: number;
-  name: string;
+export const moveSchema = z.object({
+  id: z.number(),
+  name: z.string(),
   /** Percentage, or null for moves that never miss. */
-  accuracy: number | null;
+  accuracy: z.number().nullable(),
   /** Null for status moves without direct damage. */
-  power: number | null;
-  pp: number | null;
-  effect_chance: number | null;
-  type: NamedAPIResource;
-  damage_class: NamedAPIResource | null;
-  effect_entries: MoveEffectEntry[];
-}
+  power: z.number().nullable(),
+  pp: z.number().nullable(),
+  effect_chance: z.number().nullable(),
+  type: namedResource,
+  damage_class: namedResource.nullable(),
+  effect_entries: z.array(
+    z.object({ effect: z.string(), short_effect: z.string(), language: namedResource }),
+  ),
+});
+export type Move = z.infer<typeof moveSchema>;
 
 /** Lightweight list entry with the id already extracted from the resource URL. */
 export interface PokemonSummary {
