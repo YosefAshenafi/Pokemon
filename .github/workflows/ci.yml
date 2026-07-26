@@ -34,12 +34,12 @@ jobs:
         run: npm test -- --ci
 
   # A dependency that quietly doubles the bundle is not something the steps above
-  # can see. Its own job, and only on pull requests: the check runs a full Metro
-  # export and costs a couple of minutes, which is worth paying once before a
-  # merge rather than on every push to a branch.
+  # can see. Its own job so it never delays that feedback, but on the same
+  # triggers: this workflow only fires on `main` and on pull requests into it,
+  # and gating the job to pull requests alone meant it never ran at all on a
+  # branch-free workflow.
   bundle:
     name: Bundle size
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
