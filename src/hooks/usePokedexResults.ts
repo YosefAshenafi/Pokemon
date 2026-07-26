@@ -12,6 +12,16 @@ import { usePokemonList } from './usePokemonList';
 import { usePokemonSearch } from './usePokemonSearch';
 import { usePokemonTypeIndex } from './usePokemonTypeIndex';
 
+/**
+ * The part of the filter state that decides *what* to fetch. Narrowed from
+ * `PokedexFilters` so this hook cannot reach the setters: it answers a request,
+ * it does not change one.
+ */
+export type PokedexQuery = Pick<
+  PokedexFilters,
+  'searchTerm' | 'activeTypes' | 'isSearching' | 'isFiltering'
+>;
+
 export interface PokedexResults {
   /** The rows to render, already composed from whichever queries apply. */
   data: PokemonSummary[];
@@ -45,7 +55,7 @@ export function usePokedexResults({
   activeTypes,
   isSearching,
   isFiltering,
-}: PokedexFilters): PokedexResults {
+}: PokedexQuery): PokedexResults {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 

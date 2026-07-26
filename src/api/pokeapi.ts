@@ -20,6 +20,7 @@ import type {
   Pokemon,
   PokemonListResponse,
   PokemonSummary,
+  PokemonType,
   TypeMember,
 } from './types';
 
@@ -184,9 +185,9 @@ export async function getPokemonByType(type: string): Promise<TypeMember[]> {
 }
 
 /** A `name -> [type, ...]` map for the whole Pokédex, in slot order. */
-export type PokemonTypeIndex = Record<string, string[]>;
+export type PokemonTypeIndex = Record<string, PokemonType[]>;
 
-function toIndex(slotted: Map<string, { slot: number; type: string }[]>): PokemonTypeIndex {
+function toIndex(slotted: Map<string, { slot: number; type: PokemonType }[]>): PokemonTypeIndex {
   // Null-prototype, so an API name like `__proto__` can't hit an inherited key.
   const index: PokemonTypeIndex = Object.create(null);
   for (const [name, slots] of slotted) {
@@ -208,7 +209,7 @@ export async function buildPokemonTypeIndex(
   loadType: (type: string) => Promise<TypeMember[]>,
   onProgress?: (index: PokemonTypeIndex) => void,
 ): Promise<PokemonTypeIndex> {
-  const slotted = new Map<string, { slot: number; type: string }[]>();
+  const slotted = new Map<string, { slot: number; type: PokemonType }[]>();
   let loaded = 0;
 
   for (let start = 0; start < POKEMON_TYPES.length; start += TYPE_FETCH_CONCURRENCY) {
