@@ -1,15 +1,14 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { ActivityIndicator, Button, IconButton } from 'react-native-paper';
+import { Pressable, Text, View } from 'react-native';
+import { Button } from 'react-native-paper';
 
 import { Artwork } from '@/components/Artwork';
-import { ErrorState } from '@/components/ErrorState';
-import { ScreenHeader } from '@/components/ScreenHeader';
+import { DetailScaffold } from '@/components/DetailScaffold';
 import { StatBar } from '@/components/StatBar';
 import { TypeChip } from '@/components/TypeChip';
-import { MOVES_PREVIEW_COUNT, SCREEN_BOTTOM_PADDING, SCREEN_PADDING } from '@/constants/ui';
+import { MOVES_PREVIEW_COUNT } from '@/constants/ui';
 import { usePokemon } from '@/hooks/usePokemon';
 import {
   formatHeightFeetInches,
@@ -24,7 +23,9 @@ import {
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
-      <Text className="mb-2 text-sm font-bold text-ink">{title}</Text>
+      <Text accessibilityRole="header" className="mb-2 text-sm font-bold text-ink">
+        {title}
+      </Text>
       {children}
     </View>
   );
@@ -40,35 +41,15 @@ export default function DetailScreen() {
   const visibleMoves = showAllMoves ? moves : moves.slice(0, MOVES_PREVIEW_COUNT);
 
   return (
-    <View className="flex-1 bg-bg">
-      <ScreenHeader>
-        <IconButton
-          icon="arrow-left"
-          iconColor="#FFFFFF"
-          size={26}
-          onPress={() => router.back()}
-          accessibilityLabel="Go back"
-          style={{ marginLeft: -8, marginBottom: -4 }}
-        />
-      </ScreenHeader>
-
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" accessibilityLabel="Loading Pokémon details" />
-        </View>
-      ) : isError || !data ? (
-        <ErrorState
-          message={`Details for “${formatName(name ?? '')}” could not be loaded.`}
-          onRetry={() => refetch()}
-        />
-      ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{
-            paddingHorizontal: SCREEN_PADDING,
-            paddingBottom: SCREEN_BOTTOM_PADDING,
-          }}
-        >
+    <DetailScaffold
+      isLoading={isLoading}
+      isError={isError || !data}
+      loadingLabel="Loading Pokémon details"
+      errorMessage={`Details for “${formatName(name ?? '')}” could not be loaded.`}
+      onRetry={() => refetch()}
+    >
+      {data ? (
+        <>
           <View className="mt-5 flex-row items-start justify-between">
             <View className="flex-1 pr-3">
               <Text
@@ -77,7 +58,10 @@ export default function DetailScreen() {
               >
                 {formatPokemonId(data.id)}
               </Text>
-              <Text className="mt-0.5 text-[28px] font-bold leading-9 text-ink">
+              <Text
+                accessibilityRole="header"
+                className="mt-0.5 text-[28px] font-bold leading-9 text-ink"
+              >
                 {formatName(data.name)}
               </Text>
             </View>
@@ -141,7 +125,11 @@ export default function DetailScreen() {
                   <Text className="text-xs font-semibold text-accent">
                     {formatName(move.name)}
                   </Text>
-                  <MaterialCommunityIcons name="chevron-right" size={14} className="text-accent" />
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={14}
+                    className="text-accent"
+                  />
                 </Pressable>
               ))}
             </View>
@@ -157,8 +145,8 @@ export default function DetailScreen() {
               </Button>
             ) : null}
           </SectionCard>
-        </ScrollView>
-      )}
-    </View>
+        </>
+      ) : null}
+    </DetailScaffold>
   );
 }
