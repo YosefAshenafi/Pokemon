@@ -7,10 +7,17 @@
     "icon": "./assets/images/app-icon.png",
     "scheme": "pokedex",
     "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
-      "bundleIdentifier": "com.jossyfreelancer.pokedex"
+      "bundleIdentifier": "com.jossyfreelancer.pokedex",
+      "buildNumber": "1",
+      "supportsTablet": false
     },
     "android": {
+      "package": "com.jossyfreelancer.pokedex",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon.png"
