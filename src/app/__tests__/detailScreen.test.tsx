@@ -110,6 +110,18 @@ describe('Detail screen', () => {
     await waitFor(() => expect(router.getPathname()).toBe('/'), SETTLE);
   }, TIMEOUT);
 
+  it('goes back to the Pokédex even when the detail was the first screen', async () => {
+    // A deep link or a reload on this screen leaves nothing on the stack to
+    // pop; back must land on the Pokédex rather than a GO_BACK error.
+    const router = renderApp('/pokemon/bulbasaur');
+    await screen.findByText('Base Stats', {}, SETTLE);
+
+    fireEvent.press(screen.getByLabelText('Go back'));
+
+    await waitFor(() => expect(router.getPathname()).toBe('/'), SETTLE);
+    expect(await screen.findByText('Bulbasaur', {}, SETTLE)).toBeTruthy();
+  }, TIMEOUT);
+
   it('falls back to the pokéball when a form has neither artwork nor sprite', async () => {
     renderApp('/pokemon/charizard-mega-x');
 

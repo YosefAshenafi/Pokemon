@@ -28,6 +28,13 @@ export function DetailScaffold({
 }: DetailScaffoldProps) {
   const router = useRouter();
 
+  // A deep link (or a reload while on this screen) makes the detail the whole
+  // stack; with nothing to pop, back falls through to the Pokédex.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  };
+
   return (
     <View className="flex-1 bg-bg">
       <ScreenHeader>
@@ -35,7 +42,7 @@ export function DetailScaffold({
           icon="arrow-left"
           iconColor="#FFFFFF"
           size={26}
-          onPress={() => router.back()}
+          onPress={goBack}
           accessibilityLabel="Go back"
           style={{ marginLeft: -8, marginBottom: -4 }}
         />
