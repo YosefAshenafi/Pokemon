@@ -40,7 +40,10 @@ export function SearchHeader({
 
   return (
     <ScreenHeader>
-      <Text className="w-64 text-[26px] font-bold leading-9 text-white">
+      <Text
+        accessibilityRole="header"
+        className="w-64 text-[26px] font-bold leading-9 text-white"
+      >
         Who are you{'\n'}looking for?
       </Text>
       <Searchbar

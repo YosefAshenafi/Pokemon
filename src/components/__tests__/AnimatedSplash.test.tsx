@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { resetSystemColorScheme, setSystemColorScheme } from '@/test/appearance';
+import { setReducedMotion } from '@/test/motion';
 
 import { AnimatedSplash } from '../AnimatedSplash';
 
@@ -26,6 +27,24 @@ afterEach(() => {
   });
   jest.useRealTimers();
   resetSystemColorScheme();
+});
+
+describe('AnimatedSplash - reduced motion', () => {
+  it('still hands off to the app, without the spin or the fade', async () => {
+    setReducedMotion(true);
+    const onFinish = jest.fn();
+
+    render(<AnimatedSplash onFinish={onFinish} />);
+    // Let the asynchronous preference read land before the timers run.
+    await act(async () => {});
+    act(() => {
+      jest.advanceTimersByTime(PAST_THE_FADE);
+    });
+
+    // The handoff is on the same schedule; only the movement is dropped, so a
+    // user who asked for less motion is not left on the splash.
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('AnimatedSplash', () => {

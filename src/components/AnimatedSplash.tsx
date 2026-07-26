@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, useColorScheme } from 'react-native';
 
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { darkColors, lightColors } from '@/theme/paperTheme';
 
 const LOGO_SIZE = 140;
@@ -18,6 +19,7 @@ interface AnimatedSplashProps {
 export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   const isDark = useColorScheme() === 'dark';
   const backgroundColor = isDark ? darkColors.bg : lightColors.bg;
+  const reducedMotion = useReducedMotion();
 
   const [spin] = useState(() => new Animated.Value(0));
   const [opacity] = useState(() => new Animated.Value(1));
@@ -35,12 +37,14 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
         useNativeDriver: true,
       }),
     );
-    loop.start();
+    // The spin is decoration; the handoff below still happens on the same
+    // schedule, so reduced motion costs the user nothing but the movement.
+    if (!reducedMotion) loop.start();
 
     const timer = setTimeout(() => {
       Animated.timing(opacity, {
         toValue: 0,
-        duration: FADE_MS,
+        duration: reducedMotion ? 0 : FADE_MS,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start(({ finished }) => {
@@ -57,7 +61,7 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
       // callback and call `onFinish` on a component that is already gone.
       opacity.stopAnimation();
     };
-  }, [spin, opacity, onFinish]);
+  }, [spin, opacity, onFinish, reducedMotion]);
 
   const rotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
