@@ -13,6 +13,13 @@ import { useEffect, useState } from 'react';
  * `isInternetReachable` is `null` until NetInfo has established it. Unknown is
  * treated as online: a spurious "you are offline" on a working connection is
  * worse than a late one on a broken one.
+ *
+ * Subscribes per component, unlike `useReducedMotion`, which shares one store
+ * across its readers. The asymmetry is deliberate: NetInfo already keeps a
+ * single native listener and fans out to its JavaScript subscribers, so adding
+ * a second layer of the same thing would buy nothing.
+ * `AccessibilityInfo.addEventListener` does not - each call reaches the native
+ * side - and a skeleton screen mounts eight readers at once.
  */
 export function useIsOffline(): boolean {
   const [offline, setOffline] = useState(false);

@@ -18,6 +18,14 @@ let reduced = false;
 let nativeSubscription: { remove: () => void } | null = null;
 const listeners = new Set<() => void>();
 
+/**
+ * Bumped every time the store is attached or detached, so the asynchronous
+ * first read can tell whether it still belongs to the current subscription. A
+ * reader that mounts and unmounts quickly would otherwise have its answer
+ * arrive after teardown and land on the next reader as a stale value.
+ */
+let generation = 0;
+
 function publish(next: boolean): void {
   if (next === reduced) return;
   reduced = next;
@@ -29,14 +37,18 @@ function subscribe(onStoreChange: () => void): () => void {
   listeners.add(onStoreChange);
 
   if (isFirstReader) {
+    const attachment = (generation += 1);
     nativeSubscription = AccessibilityInfo.addEventListener('reduceMotionChanged', publish);
-    AccessibilityInfo.isReduceMotionEnabled().then(publish);
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (attachment === generation) publish(enabled);
+    });
   }
 
   return () => {
     listeners.delete(onStoreChange);
     if (listeners.size > 0) return;
 
+    generation += 1;
     nativeSubscription?.remove();
     nativeSubscription = null;
     // With nothing listening, the setting can change without us hearing it, so
