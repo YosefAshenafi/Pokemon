@@ -88,6 +88,17 @@ All three commands run on every push and pull request via [GitHub Actions](.gith
 Everything else in the Performance section below is reasoned, not measured — the list
 tuning and the prefetch window have not been profiled on a device.
 
+### End-to-end
+
+```bash
+maestro test .maestro/smoke.yaml     # needs a device or simulator with the app installed
+```
+
+One flow — cold start, search, open a detail, go back — covering the one thing 211
+Jest tests cannot: that the built app launches on a device. It is **not** in CI, which
+has no device attached, and **has not been run yet**: the native build needs a machine
+with a current Xcode or Android SDK, which is the one gap left in this project.
+
 ### No mocking of application code
 
 **No module under `src/` is ever mocked.** Screen tests boot the real Expo Router stack over the real route files: the same layout, providers, QueryClient, hooks, PokeAPI client and components that run on a device.
@@ -148,6 +159,6 @@ a response that will not parse, or one that no longer matches its schema.
 - **One request per refresh.** Pull-to-refresh collapses the infinite query to its first page before refetching; `refetch()` alone would re-request every page loaded so far.
 - **Cheap re-renders.** `PokemonCard` is `React.memo` and purely presentational, so fast scrolling re-runs no data logic. The type-filter intersection uses a module-scope `combine`, letting React Query structurally share the result array across renders.
 - **Progressive loading.** The type index publishes each batch of six as it lands, and skeleton cards match the real card geometry, so nothing shifts when data arrives.
-- **No row measurement.** Card geometry is data (`CARD_METRICS`), so the grid can give `FlatList` an exact `getItemLayout` instead of measuring every row — the usual cause of blank cells during a fast Android fling. The height scales with the system font size, so capping text growth and pinning row height stay consistent.
+- **No row measurement.** Card geometry is data (`CARD_METRICS`), so the grid can give `FlatList` an exact `getItemLayout` instead of measuring every row — the usual cause of blank cells during a fast Android fling. The height scales with the system font size, so capping text growth and pinning row height stay consistent. `removeClippedSubviews` is deliberately left off until that can be watched on hardware: it decides what to detach from the layout `getItemLayout` asserts, and pairing the two unverified trades a visible bug against an unmeasured gain.
 - **Cached images.** `expo-image` handles on-disk caching and a 200 ms fade-in; the fallback chain (official art → sprite → drawn pokéball) means a 404 on a mega form never leaves a broken image or a retry storm.
 - **React Compiler on** via `experiments.reactCompiler` in `app.json`, so components are auto-memoized at build time.

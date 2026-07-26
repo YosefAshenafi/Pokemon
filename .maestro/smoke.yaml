@@ -1,0 +1,32 @@
+# The one flow unit tests cannot cover: that the built app launches on a device
+# and its core path works end to end. Everything below runs against the real
+# PokeAPI, so it needs a network.
+#
+# Run with a simulator or device attached, and the app installed:
+#   maestro test .maestro/smoke.yaml
+appId: com.jossyfreelancer.pokedex
+---
+- launchApp:
+    clearState: true
+
+# A cold start with no cache: the splash hands off and the first page arrives.
+- assertVisible: 'Who are you'
+- assertVisible:
+    text: 'Bulbasaur'
+    timeout: 20000
+
+# Search narrows the grid to a name typed by hand.
+- tapOn: 'e.g. Pikachu or 25'
+- inputText: 'pika'
+- assertVisible: 'Pikachu'
+
+# Detail opens with the sections that depend on a second request.
+- tapOn: 'Pikachu'
+- assertVisible:
+    text: 'Base Stats'
+    timeout: 20000
+- assertVisible: 'Breeding'
+
+# ...and the stack unwinds back to the search that was still active.
+- back
+- assertVisible: 'Pikachu'

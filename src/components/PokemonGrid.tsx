@@ -126,10 +126,13 @@ export function PokemonGrid({
       // iOS does not resize the window for the keyboard the way Android's
       // adjustResize does, so without this the last rows sit under it.
       automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-      // Detaching off-screen rows from the native view tree is a clear win on
-      // Android's view system and has a history of clipping bugs on iOS, where
-      // the gain is smaller anyway.
-      removeClippedSubviews={Platform.OS === 'android'}
+      // `removeClippedSubviews` deliberately left off. It detaches off-screen
+      // rows from the native view tree, which is a real win on Android - but it
+      // has a long history of blanking cells, and it decides what to detach
+      // from the layout `getItemLayout` above asserts rather than from measured
+      // views. Turning both on together without watching a device fling is a
+      // trade of a visible bug against an unmeasured gain. Enable it once that
+      // has been checked on hardware.
       initialNumToRender={LIST_INITIAL_RENDER}
       maxToRenderPerBatch={LIST_BATCH_SIZE}
       windowSize={LIST_WINDOW_SIZE}
