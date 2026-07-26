@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
-import { holdDown } from '@/test/press';
+import { holdDown, release } from '@/test/press';
 
 import { PokemonCard } from '../PokemonCard';
 
@@ -55,6 +55,12 @@ describe('PokemonCard', () => {
     const pressed = StyleSheet.flatten(screen.getByRole('button').props.style);
     expect(pressed.opacity).toBe(0.85);
     expect(pressed.transform).toEqual([{ scale: 0.98 }]);
+
+    release(screen.getByRole('button'));
+
+    const released = StyleSheet.flatten(screen.getByRole('button').props.style);
+    expect(released.opacity).toBe(1);
+    expect(released.transform).toEqual([{ scale: 1 }]);
   });
 
   it('invokes onPressIn on press-in so the detail can be prefetched', () => {

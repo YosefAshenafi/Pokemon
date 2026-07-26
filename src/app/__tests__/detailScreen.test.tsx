@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { StyleSheet } from 'react-native';
 
-import { holdDown } from '@/test/press';
+import { holdDown, release } from '@/test/press';
 import { renderApp, setupFakeApi } from '@/test/renderApp';
 
 const getApi = setupFakeApi();
@@ -140,6 +140,10 @@ describe('Detail screen', () => {
     holdDown(pill);
 
     expect(StyleSheet.flatten(screen.getByLabelText('Tackle move').props.style).opacity).toBe(0.6);
+
+    release(screen.getByLabelText('Tackle move'));
+
+    expect(StyleSheet.flatten(screen.getByLabelText('Tackle move').props.style).opacity).toBe(1);
   }, TIMEOUT);
 
   it('shows the error state for a Pokémon that does not exist', async () => {

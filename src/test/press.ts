@@ -22,3 +22,10 @@ export function holdDown(element: ReactTestInstance): void {
     fireEvent(element, 'responderGrant', TOUCH_EVENT);
   });
 }
+
+/** Lets go of an element held by `holdDown` without completing a tap. */
+export function release(element: ReactTestInstance): void {
+  act(() => {
+    fireEvent(element, 'pressOut', TOUCH_EVENT);
+  });
+}
