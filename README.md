@@ -82,7 +82,7 @@ All three commands run on every push and pull request via [GitHub Actions](.gith
 
 | What | Value |
 | ---- | ----- |
-| Android JS bundle (Hermes bytecode) | 4.98 MB, against a 6 MB CI ceiling |
+| Android JS bundle (Hermes bytecode) | 5.00 MB (measured in CI), against a 6 MB ceiling |
 | Zod parse of the 1302-entry name index | 0.25 ms |
 
 Everything else in the Performance section below is reasoned, not measured — the list
