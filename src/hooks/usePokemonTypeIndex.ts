@@ -4,12 +4,7 @@ import { buildPokemonTypeIndex, getPokemonByType } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
 import { STATIC_STALE_TIME } from '@/constants/cache';
 
-/**
- * A `name -> types` map for the whole Pokédex, read by the list cards instead
- * of each fetching a full Pokémon detail. Types load through `ensureQueryData`
- * under the same keys the type filter uses, so the two share one request per
- * type, and batches are published as they land so chips appear progressively.
- */
+/** A `name -> types` map for the whole Pokédex, read by the list cards. */
 export function usePokemonTypeIndex() {
   const queryClient = useQueryClient();
 
@@ -25,6 +20,6 @@ export function usePokemonTypeIndex() {
           }),
         (partial) => queryClient.setQueryData(queryKeys.typeIndex, partial),
       ),
-    staleTime: STATIC_STALE_TIME, // a Pokémon's types never change
+    staleTime: STATIC_STALE_TIME,
   });
 }

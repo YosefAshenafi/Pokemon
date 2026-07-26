@@ -7,14 +7,9 @@ import { formatName } from '@/utils/format';
 
 interface ActiveTypeFiltersProps {
   types: PokemonType[];
-  /** Called with the type to drop from the selection. */
   onRemove: (type: PokemonType) => void;
 }
 
-/**
- * The row of dismissible chips under the search bar. Distinct from `TypeChip`,
- * which labels a Pokémon's own types and is not interactive.
- */
 export function ActiveTypeFilters({ types, onRemove }: ActiveTypeFiltersProps) {
   if (types.length === 0) return null;
 

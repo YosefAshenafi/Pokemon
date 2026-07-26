@@ -32,35 +32,17 @@ const paperSettings = {
   ),
 };
 
-/**
- * Expo Router mounts this in place of the tree when a render throws, instead of
- * unmounting the app. Everything below reads third-party responses, so this is
- * the last stop for a shape the client validated too loosely - without it, one
- * unexpected field is a white screen with no way back.
- *
- * React logs the error itself before this renders; `reportError` is what sends
- * it somewhere we can see it from a device we don't own.
- */
+/** Mounted by Expo Router in place of the tree when a render throws. */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? darkColors : lightColors;
 
-  // In an effect, not in the render body: React may render a component more
-  // than once for a single error - in development, and whenever it re-renders
-  // for an unrelated reason such as the colour scheme changing - and each of
-  // those would otherwise be a duplicate report.
   useEffect(() => {
     reportError(error, { boundary: 'root' });
   }, [error]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/*
-        The user gets wording they can act on; the exception text goes to the
-        report above. Putting `error.message` on screen reads as unfinished and
-        leaks internals - a zod failure or "undefined is not a function" tells
-        a user nothing and tells anyone else slightly too much.
-      */}
       <ErrorState
         message="This screen could not be shown. Please try again."
         onRetry={() => {
@@ -77,11 +59,6 @@ export default function RootLayout() {
   const [splashVisible, setSplashVisible] = useState(true);
   const [cacheReady, setCacheReady] = useState(false);
 
-  // One-time migration: earlier builds persisted the whole cache, which could leave
-  // the AsyncStorage DB full on Android. multiRemove frees space even when the DB is
-  // full, so this is safe to run against a SQLITE_FULL database. The tree below waits
-  // for it - a query persisting between the getAllKeys snapshot and the removal would
-  // be deleted too, leaving this launch with no cache at all.
   useEffect(() => {
     (async () => {
       try {
@@ -90,14 +67,12 @@ export default function RootLayout() {
           await AsyncStorage.setItem(CACHE_MIGRATION_KEY, '1');
         }
       } catch {
-        // Best-effort cleanup; the app works without it.
       } finally {
         setCacheReady(true);
       }
     })();
   }, []);
 
-  // A couple of AsyncStorage round trips, still behind the native splash.
   if (!cacheReady) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
 
   return (
@@ -111,8 +86,6 @@ export default function RootLayout() {
               contentStyle: { backgroundColor: colors.bg },
             }}
           />
-          {/* In the flow below the stack, so it shortens the screen rather than
-              covering the last row of whatever is on it. */}
           <OfflineBanner />
         </View>
         {splashVisible ? <AnimatedSplash onFinish={() => setSplashVisible(false)} /> : null}

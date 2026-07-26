@@ -41,7 +41,6 @@ describe('PokemonGrid', () => {
   });
 
   it('says so when the render cap hid further matches', () => {
-    // Otherwise the last visible row reads as the last match, which it is not.
     renderGrid({ truncated: true });
 
     expect(screen.getByText(new RegExp(`first ${SEARCH_RESULT_LIMIT} matches`))).toBeTruthy();
@@ -61,9 +60,6 @@ describe('PokemonGrid', () => {
   });
 
   describe('scroll position across request changes', () => {
-    // Found on a device, not in review: searching while scrolled seven pages
-    // deep kept the old offset, opening the results on their middle with the
-    // best match stranded far above.
     it('returns to the top when the request behind the rows changes', () => {
       const scrollToOffset = jest
         .spyOn(FlatList.prototype, 'scrollToOffset')
@@ -98,7 +94,6 @@ describe('PokemonGrid', () => {
       const { rerender } = renderGrid();
       scrollToOffset.mockClear();
 
-      // Two more rows, same request: the user is mid-scroll and must stay there.
       rerender(
         <PokemonGrid
           data={[...ROWS, { id: 7, name: 'squirtle' }, { id: 8, name: 'wartortle' }]}
@@ -120,11 +115,6 @@ describe('PokemonGrid', () => {
     });
   });
 
-  /**
-   * `getItemLayout` is a promise about geometry, and the test renderer measures
-   * everything as zero - so nothing else in this suite can tell whether the
-   * promise is true. These assertions pin the two things that make it correct.
-   */
   describe('getItemLayout', () => {
     const layoutOf = (index: number) => {
       renderGrid();
@@ -136,10 +126,6 @@ describe('PokemonGrid', () => {
       const first = layoutOf(0);
       const second = layoutOf(1);
 
-      // The argument is a ROW index: FlatList reports row counts to
-      // VirtualizedList for a multi-column list but passes this callback
-      // straight through. Treating it as an item index and dividing by the
-      // column count would put rows 0 and 1 at the same offset.
       expect(first.offset).toBe(0);
       expect(second.offset).toBe(first.length);
       expect(second.length).toBe(first.length);
@@ -156,16 +142,11 @@ describe('PokemonGrid', () => {
     it('reserves the height for the scale the device is actually running at', () => {
       const { length } = layoutOf(0);
 
-      // Not `gridRowHeight(1)`: the promise has to track the live font scale,
-      // or a user with larger text gets rows that overlap.
       expect(length).toBe(gridRowHeight(Dimensions.get('window').fontScale));
     });
 
     it('grows the row when the system font size does', () => {
-      // Reserved space and rendered text scale together, so a fixed row height
-      // and dynamic type do not have to be in conflict.
       expect(gridRowHeight(1.3)).toBeGreaterThan(gridRowHeight(1));
-      // ...but only up to the ceiling the card itself caps text at.
       expect(gridRowHeight(3)).toBe(gridRowHeight(CARD_MAX_FONT_SCALE));
     });
   });

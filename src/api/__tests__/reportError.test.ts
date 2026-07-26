@@ -6,8 +6,6 @@ afterEach(() => {
 
 describe('reportError', () => {
   it('stays silent until a reporter is installed', () => {
-    // Development and test runs should not need a vendor configured, so an
-    // unreported failure must be a no-op rather than a crash.
     expect(() => reportError(new Error('boom'))).not.toThrow();
   });
 

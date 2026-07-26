@@ -5,19 +5,12 @@ import { queryClient } from '@/api/queryClient';
 
 import { installFakePokeApi, type FakePokeApi } from './fakePokeApi';
 
-/**
- * Boots the real Expo Router stack over the real `src/app` route files - the
- * same `_layout.tsx`, screens, providers and QueryClient the device runs. Only
- * the network is faked, via `installFakePokeApi`.
- */
+/** Boots the real Expo Router stack over the real `src/app` route files. */
 export function renderApp(initialUrl = '/') {
   return renderRouter('src/app', { initialUrl });
 }
 
-/**
- * Installs the fake API and isolates cache state between tests. Returns a getter
- * because the handle is recreated for each test.
- */
+/** Installs the fake API and isolates cache state between tests. */
 export function setupFakeApi(): () => FakePokeApi {
   let api: FakePokeApi;
 
@@ -26,10 +19,6 @@ export function setupFakeApi(): () => FakePokeApi {
     queryClient.clear();
     await AsyncStorage.clear();
 
-    // Configure the real client rather than replacing it: React Query's default
-    // exponential backoff would add seconds of dead wait to every failure test,
-    // and retry counts are the library's behaviour, not this app's. Every other
-    // default - staleTime, gcTime, the AsyncStorage persister - is preserved.
     const defaults = queryClient.getDefaultOptions();
     queryClient.setDefaultOptions({
       ...defaults,
@@ -47,15 +36,7 @@ export function setupFakeApi(): () => FakePokeApi {
 
 const GRID = 'pokemon-grid';
 
-/**
- * Drives the grid to its end so the next page loads.
- *
- * The scroll event is dispatched first so the real ScrollView path runs, then
- * `endReached` is fired directly: VirtualizedList decides that threshold from
- * measured layout, and the test renderer measures every element as zero-sized,
- * so a scroll offset alone never crosses it. This fires the screen's own
- * `onEndReached` handler - guards and all - the way `press` fires `onPress`.
- */
+/** Drives the grid to its end so the next page loads. */
 export function scrollToEnd(testID = GRID) {
   const grid = screen.getByTestId(testID);
 
@@ -83,7 +64,7 @@ export function search(text: string) {
   fireEvent.changeText(screen.getByLabelText('Search Pokémon by name or number'), text);
 }
 
-/** Opens the type filter bottom sheet from the search bar's trailing icon. */
+/** Opens the type filter bottom sheet. */
 export function openTypeFilter() {
   fireEvent.press(screen.getByLabelText('Filter Pokémon by type'));
 }

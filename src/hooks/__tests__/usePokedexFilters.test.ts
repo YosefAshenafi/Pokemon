@@ -4,10 +4,6 @@ import { MAX_TYPE_FILTERS } from '@/constants/ui';
 
 import { usePokedexFilters } from '../usePokedexFilters';
 
-/**
- * Filters own no queries, so this needs no provider and no network - which is
- * the point of separating them from the hook that answers them.
- */
 describe('usePokedexFilters', () => {
   it('starts with nothing searched or filtered', () => {
     const { result } = renderHook(() => usePokedexFilters());
@@ -46,8 +42,6 @@ describe('usePokedexFilters', () => {
     act(() => result.current.toggleType('poison'));
     act(() => result.current.toggleType('fire'));
 
-    // The sheet disables the control too, but the rule lives here so it holds
-    // however the selection is reached.
     expect(result.current.activeTypes).toEqual(['grass', 'poison']);
     expect(result.current.activeTypes.length).toBe(MAX_TYPE_FILTERS);
   });

@@ -20,9 +20,6 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  // The browser mounts the type index, which is 18 requests deep and outlives
-  // the assertion each test came for. Letting it settle here keeps its results
-  // from landing on a torn-down tree and flaking the run.
   await waitFor(() => expect(queryClient.isFetching()).toBe(0), { timeout: 15000 });
   api.restore();
   queryClient.clear();
@@ -33,11 +30,6 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('usePokedexBrowser', () => {
-  /**
-   * Refresh collapses the infinite query to its first page before refetching.
-   * With nothing cached there is no page list to slice, and the refresh has to
-   * be a no-op rather than write an empty result over the query.
-   */
   it('survives a refresh requested before any page has been cached', async () => {
     api.offline = true;
     const { result } = renderHook(() => usePokedexBrowser(), { wrapper });
@@ -49,7 +41,6 @@ describe('usePokedexBrowser', () => {
       await result.current.refresh();
     });
 
-    // The spinner is released in a `finally`, and the retry recovered the list.
     expect(result.current.refreshing).toBe(false);
     await waitFor(() => expect(result.current.data.length).toBeGreaterThan(0));
   });

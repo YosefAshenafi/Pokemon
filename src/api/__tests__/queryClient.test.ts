@@ -57,8 +57,6 @@ describe('queryClient defaults', () => {
   });
 
   it('only persists the small, bounded queries', () => {
-    // Guards the pairing between the client's persister and the allowlist: a
-    // Pokémon detail is ~200 KB and must never reach AsyncStorage.
     expect(queryKeys.detail('bulbasaur')).toEqual(['pokemon', 'detail', 'bulbasaur']);
     expect(queryKeys.move('tackle')).toEqual(['move', 'detail', 'tackle']);
   });
@@ -94,8 +92,6 @@ describe('query failure reporting', () => {
   });
 
   it('stays quiet about a dropped connection', async () => {
-    // Otherwise one offline launch sends nineteen reports - one per type in the
-    // index - none of which describe anything we could fix.
     const reporter = await failWith(
       new ApiError('Network request failed.', { kind: 'network' }),
     );
@@ -104,7 +100,6 @@ describe('query failure reporting', () => {
   });
 
   it('reports an error that did not come from the API client at all', async () => {
-    // An unrecognised failure is a bug until proven otherwise.
     const reporter = await failWith(new TypeError('undefined is not a function'));
 
     expect(reporter).toHaveBeenCalled();

@@ -1,29 +1,13 @@
-# The same smoke flow as smoke.yaml, for the Expo Go workflow this project's
-# README recommends - useful on a machine whose native toolchain cannot build
-# the standalone binary. Needs `npx expo start` running first.
-#
-# Expo Go cannot clearState the way the standalone flow does, but stopping it
-# and re-entering through the deep link is the same idea: every run cold-boots
-# the project at its root screen, instead of inheriting whatever screen, search
-# text and scroll position the previous session left behind. It also keeps the
-# flow away from Expo Go's warm-restore states, whose transient loading chrome
-# can briefly show controls (a stray "Go back") that a stack-unwinding loop
-# would misread and tap.
+# Expo Go variant of smoke.yaml - needs `npx expo start` running first.
 appId: host.exp.Exponent
 ---
 - stopApp
 - openLink: 'exp://127.0.0.1:8081'
 
-# A cold boot always lands on the list. Generous timeout - it also downloads
-# the JS bundle from Metro. The field's accessibility label, not its
-# placeholder: the placeholder disappears on focus, the label never does.
 - extendedWaitUntil:
     visible: 'Search Pokémon by name or number'
     timeout: 60000
 
-# The first-ever open of a project overlays a one-time "This is the developer
-# menu" sheet. The app behind it is already rendered; dismiss it only if this
-# happens to be that first run.
 - runFlow:
     when:
       visible: 'Continue'
@@ -31,20 +15,10 @@ appId: host.exp.Exponent
       - tapOn: 'Continue'
 - waitForAnimationToEnd
 
-# Focus, clear and search as one retried unit. On a cold start the app can
-# still be settling when the tap lands, and keyboard focus is silently
-# dropped - the typed text goes nowhere; the retry runs the whole sequence
-# again on the now-settled app. No assertion on Bulbasaur or the full dex
-# here: the keyboard's inset adjustment can leave the list scrolled anywhere,
-# so Pikachu appearing for a hand-typed query is the one scroll-proof signal
-# that focus, erase and search all worked.
 - retry:
     maxRetries: 2
     commands:
       - tapOn: 'Search Pokémon by name or number'
-      # The first keyboard on a fresh simulator brings up iOS's own QuickPath
-      # tutorial sheet, which also ends in a Continue button. Dismiss it and
-      # put focus back where it was.
       - runFlow:
           when:
             visible: 'Continue'
@@ -58,15 +32,11 @@ appId: host.exp.Exponent
           visible: 'Pikachu, #025'
           timeout: 15000
 
-# Detail opens with the sections that depend on a second request. The full
-# label, because 'Pikachu.*' also matches the Rock Star and Belle forms the
-# same search returns.
 - tapOn: 'Pikachu, #025'
 - extendedWaitUntil:
     visible: 'Base Stats'
     timeout: 20000
 - assertVisible: 'Breeding'
 
-# ...and the stack unwinds to the search that was still active.
 - tapOn: 'Go back'
 - assertVisible: 'Pikachu, #025'

@@ -2,7 +2,6 @@ import { View } from 'react-native';
 
 import { Pulse } from './Pulse';
 
-/** Loading placeholder matching the geometry of a PokemonCard. */
 export function SkeletonCard() {
   return (
     <Pulse className="mb-3 w-[48%] rounded-2xl border border-line bg-surface p-3">

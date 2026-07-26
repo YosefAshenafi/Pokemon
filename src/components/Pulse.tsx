@@ -3,14 +3,11 @@ import { Animated, Easing, useAnimatedValue, type ViewProps } from 'react-native
 
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-/** Gently pulses its children. Used by skeleton placeholders. */
 export function Pulse({ style, children, ...rest }: ViewProps) {
   const opacity = useAnimatedValue(1);
   const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    // The pulse only signals "still loading", which the skeleton shape already
-    // says on its own, so there is nothing to replace it with.
     if (reducedMotion) return;
 
     const loop = Animated.loop(

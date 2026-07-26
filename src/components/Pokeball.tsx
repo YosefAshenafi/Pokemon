@@ -8,7 +8,6 @@ interface PokeballProps {
 
 const WHITE_16 = 'rgba(255, 255, 255, 0.16)';
 
-/** Decorative pokéball watermark drawn with plain Views (no image asset). */
 export function Pokeball({ size = 150, style, color = WHITE_16 }: PokeballProps) {
   const ring = Math.round(size * 0.09);
   const innerHeight = size - ring * 2;

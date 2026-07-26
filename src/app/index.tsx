@@ -72,14 +72,12 @@ export default function ListScreen() {
   );
 }
 
-/** Names the thing that failed, so a retry is an informed choice. */
 function errorMessage(isSearching: boolean, isFiltering: boolean): string {
   if (isSearching) return 'The Pokémon index could not be loaded.';
   if (isFiltering) return 'These types could not be loaded. Check your connection and try again.';
   return 'The Pokédex could not be loaded. Check your connection and try again.';
 }
 
-/** Echoes what was actually searched or filtered for, rather than "no results". */
 function emptyMessage(query: string, activeTypes: PokemonType[]): string {
   const term = query.trim();
   const typesLabel = activeTypes.map(formatName).join(' & ');

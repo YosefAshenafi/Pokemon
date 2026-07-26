@@ -11,18 +11,12 @@ import { ScreenHeader } from './ScreenHeader';
 interface SearchHeaderProps {
   query: string;
   onQueryChange: (query: string) => void;
-  /** Called when the field takes focus, to warm the name index before typing. */
   onQueryFocus: () => void;
   activeTypes: PokemonType[];
-  /** Called with the type to drop from the selection. */
   onRemoveType: (type: PokemonType) => void;
   onOpenFilters: () => void;
 }
 
-/**
- * The list screen's blue header: title, search field, and the chips for
- * whichever types are currently filtering the grid.
- */
 export function SearchHeader({
   query,
   onQueryChange,
@@ -34,8 +28,6 @@ export function SearchHeader({
   const isDark = useColorScheme() === 'dark';
   const colors = isDark ? darkColors : lightColors;
 
-  // Tint the filter icon with the first selected type, so the control shows
-  // that a filter is on without needing a badge.
   const filterIconColor = activeTypes[0] ? typeColor(activeTypes[0]) : undefined;
 
   return (

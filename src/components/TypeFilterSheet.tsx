@@ -17,13 +17,11 @@ import { formatName } from '@/utils/format';
 interface TypeFilterSheetProps {
   visible: boolean;
   activeTypes: PokemonType[];
-  /** Toggles a single type in or out of the selection. */
   onToggle: (type: PokemonType) => void;
   onClear: () => void;
   onDismiss: () => void;
 }
 
-/** Bottom sheet that filters the Pokédex to any combination of types. */
 export function TypeFilterSheet({
   visible,
   activeTypes,
@@ -37,8 +35,6 @@ export function TypeFilterSheet({
   const hasSelection = activeTypes.length > 0;
   const queryClient = useQueryClient();
 
-  // Warm every type when the sheet opens so tapping one filters instantly. The
-  // type index has usually filled these keys already, so this rarely fetches.
   useEffect(() => {
     if (!visible) return;
     for (const type of POKEMON_TYPES) {
@@ -55,7 +51,6 @@ export function TypeFilterSheet({
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        // Drop Paper's safe-area marginBottom; paddingBottom handles the inset.
         style={{ justifyContent: 'flex-end', marginBottom: 0 }}
         contentContainerStyle={{
           backgroundColor: colors.surface,
@@ -118,8 +113,6 @@ export function TypeFilterSheet({
           {POKEMON_TYPES.map((type) => {
             const background = typeColor(type);
             const selected = activeTypes.includes(type);
-            // Two is the ceiling, so past it the only useful action on an
-            // unselected chip is to tell the user why it does nothing.
             const disabled = !selected && activeTypes.length >= MAX_TYPE_FILTERS;
             return (
               <Pressable
@@ -146,8 +139,6 @@ export function TypeFilterSheet({
                   borderRadius: 999,
                   borderWidth: 2,
                   borderColor: selected ? colors.ink : 'transparent',
-                  // Dim the unselected types once a selection exists, and dim
-                  // the unselectable ones further still.
                   opacity: disabled ? 0.35 : !hasSelection || selected ? 1 : 0.6,
                 }}
               >

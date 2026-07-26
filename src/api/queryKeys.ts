@@ -1,7 +1,4 @@
-/**
- * Every React Query key in one place, so the hooks, the prefetches and the
- * persistence allowlist below can't drift apart.
- */
+/** Every React Query key in one place. */
 export const queryKeys = {
   list: ['pokemon', 'list'] as const,
   names: ['pokemon', 'names'] as const,
@@ -12,11 +9,6 @@ export const queryKeys = {
   move: (name: string) => ['move', 'detail', name.trim().toLowerCase()] as const,
 };
 
-/**
- * Key prefixes small enough to survive a restart. An allowlist, not a denylist:
- * a new query isn't persisted until it is listed here, so an unbounded response
- * can never silently fill up storage.
- */
 const PERSISTED_KEY_PREFIXES: readonly (readonly unknown[])[] = [
   queryKeys.list,
   queryKeys.names,

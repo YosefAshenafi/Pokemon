@@ -24,14 +24,7 @@ import type {
   TypeMember,
 } from './types';
 
-/**
- * Why a request failed, as data rather than as prose.
- *
- * The distinction that matters downstream is whether a failure says something
- * about *us*: `network` and `timeout` mean a user is on a train, and there are
- * millions of those; `contract` and `unreadable` mean the API changed under us
- * and somebody needs to know today.
- */
+/** Why a request failed, as data the UI can branch on. */
 export type ApiErrorKind = 'network' | 'timeout' | 'http' | 'unreadable' | 'contract';
 
 export class ApiError extends Error {
@@ -43,7 +36,6 @@ export class ApiError extends Error {
     options: {
       kind: ApiErrorKind;
       status?: number;
-      /** The underlying failure, kept so a report carries more than our wording. */
       cause?: unknown;
     },
   ) {
@@ -54,28 +46,13 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Whether a failure is worth reporting. A dropped connection is the user's
- * network telling us nothing we can act on, and the type index alone would
- * send nineteen of them from a single offline launch.
- */
+/** Network and timeout failures are the user's connection, not ours - not reported. */
 export function isReportableError(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
   return error.kind !== 'network' && error.kind !== 'timeout';
 }
 
-/**
- * The single choke point every request passes through. Callers pass only a
- * path, never a full URL, so the HTTPS origin above is the only host this client
- * can ever reach; all interpolated segments are `encodeURIComponent`-escaped by
- * the callers so a name can never break out of its path.
- *
- * The body is *parsed* against `schema` rather than cast. A third party can
- * change a field without telling us, and an unchecked cast turns that into a
- * crash inside a render; parsing turns it into an ordinary, retryable error
- * that the screen already knows how to show, and reports it so we hear about
- * it before a user does.
- */
+/** Fetches a PokeAPI path and validates the body against `schema`. */
 async function fetchJson<T>(
   path: string,
   schema: z.ZodType<T>,
@@ -108,9 +85,6 @@ async function fetchJson<T>(
       );
     }
 
-    // A 200 carrying a proxy's HTML error page parses as a SyntaxError, not a
-    // network failure. Converting it here keeps every failure out of this
-    // client shaped like an ApiError, so no caller has to render a raw one.
     let body: unknown;
     try {
       body = await response.json();
@@ -145,7 +119,6 @@ function toSummaries(results: PokemonListResponse['results']): PokemonSummary[] 
 export interface PokemonPage {
   pokemon: PokemonSummary[];
   count: number;
-  /** `null` once the Pokédex has no further pages. */
   nextOffset: number | null;
 }
 
@@ -165,10 +138,7 @@ export function getPokemon(nameOrId: string | number): Promise<Pokemon> {
   return fetchJson(`/pokemon/${encodeURIComponent(key)}`, pokemonSchema);
 }
 
-/**
- * All Pokémon of a type, in National Dex order. The slot is kept so the type
- * index can be built from these same responses rather than refetching them.
- */
+/** All Pokémon of a type, in National Dex order. */
 export async function getPokemonByType(type: string): Promise<TypeMember[]> {
   const key = type.trim().toLowerCase();
   const data = await fetchJson(
@@ -184,11 +154,10 @@ export async function getPokemonByType(type: string): Promise<TypeMember[]> {
     .sort((a, b) => a.id - b.id);
 }
 
-/** A `name -> [type, ...]` map for the whole Pokédex, in slot order. */
+/** A `name -> types` map for the whole Pokédex. */
 export type PokemonTypeIndex = Record<string, PokemonType[]>;
 
 function toIndex(slotted: Map<string, { slot: number; type: PokemonType }[]>): PokemonTypeIndex {
-  // Null-prototype, so an API name like `__proto__` can't hit an inherited key.
   const index: PokemonTypeIndex = Object.create(null);
   for (const [name, slots] of slotted) {
     index[name] = [...slots].sort((a, b) => a.slot - b.slot).map((entry) => entry.type);
@@ -196,15 +165,7 @@ function toIndex(slotted: Map<string, { slot: number; type: PokemonType }[]>): P
   return index;
 }
 
-/**
- * Builds the type index by reading each type's roster once, so list cards get
- * their chips without each fetching a ~200 KB detail - the N+1 that made deep
- * infinite scroll crawl. `loadType` is injected so the caller can serve it from
- * the same cache the type filter uses; `onProgress` reports the index so far.
- *
- * One failing type is skipped, but a run where *every* type fails rejects: an
- * empty index would be cached and persisted as if it were a real answer.
- */
+/** Builds the type index from each type's roster; rejects only if every type fails. */
 export async function buildPokemonTypeIndex(
   loadType: (type: string) => Promise<TypeMember[]>,
   onProgress?: (index: PokemonTypeIndex) => void,
@@ -232,8 +193,6 @@ export async function buildPokemonTypeIndex(
       }
     }
 
-    // An empty map means every type so far failed; reporting it would read as a
-    // successful "no types" answer, so wait for real data.
     const isLastBatch = start + TYPE_FETCH_CONCURRENCY >= POKEMON_TYPES.length;
     if (!isLastBatch && slotted.size > 0) onProgress?.(toIndex(slotted));
   }
@@ -252,10 +211,7 @@ export function getMove(nameOrId: string | number): Promise<Move> {
   return fetchJson(`/move/${encodeURIComponent(key)}`, moveSchema, 'Move not found.');
 }
 
-/**
- * The complete name index (~1300 entries, a few KB) used for client-side
- * search, since PokeAPI has no substring-search endpoint.
- */
+/** The complete name index (~1300 entries) used for client-side search. */
 export async function getAllPokemonNames(): Promise<PokemonSummary[]> {
   const data = await fetchJson('/pokemon?offset=0&limit=100000', pokemonListResponseSchema);
   return toSummaries(data.results);

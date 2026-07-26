@@ -6,14 +6,7 @@ import { queryKeys } from '@/api/queryKeys';
 import type { PokemonSummary } from '@/api/types';
 import { STATIC_STALE_TIME } from '@/constants/cache';
 
-/**
- * Filters the name index. A numeric query (optionally '#'-prefixed) matches
- * Pokédex ids; otherwise names match, prefixes ranked before substrings.
- *
- * Returns every match, ranked. Capping is deliberately left to the caller: the
- * list screen intersects these results with the type filter, and truncating
- * here would hide matches that the intersection needed to see.
- */
+/** Filters the name index by name or Pokédex number, prefix matches ranked first. */
 export function searchPokemonIndex(
   names: PokemonSummary[],
   query: string,
@@ -23,7 +16,7 @@ export function searchPokemonIndex(
 
   const idQuery = trimmed.replace(/^#/, '');
   if (/^\d+$/.test(idQuery)) {
-    const prefix = String(Number(idQuery)); // "025" -> "25", so "#025" finds #25
+    const prefix = String(Number(idQuery));
     return names.filter((entry) => String(entry.id).startsWith(prefix)).sort((a, b) => a.id - b.id);
   }
 
@@ -36,10 +29,7 @@ export function searchPokemonIndex(
   return [...prefixMatches, ...substringMatches];
 }
 
-/**
- * Client-side search, since PokeAPI has no substring-search endpoint: the whole
- * name index is fetched once per session and filtered locally.
- */
+/** Client-side search over the full name index. */
 export function usePokemonSearch(query: string) {
   const namesQuery = useQuery({
     queryKey: queryKeys.names,

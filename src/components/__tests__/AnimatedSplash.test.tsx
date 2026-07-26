@@ -6,14 +6,11 @@ import { setReducedMotion } from '@/test/motion';
 
 import { AnimatedSplash, SPLASH_TIMING } from '../AnimatedSplash';
 
-// expo-splash-screen drives the native launch screen, which does not exist under
-// Jest. Its exports are non-configurable, so they cannot be spied on in place.
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn().mockResolvedValue(true),
   hideAsync: jest.fn().mockResolvedValue(true),
 }));
 
-/** Comfortably past the hold plus the fade, whatever those are tuned to. */
 const PAST_THE_FADE = SPLASH_TIMING.hold + SPLASH_TIMING.fade + 1000;
 
 beforeEach(() => {
@@ -35,14 +32,11 @@ describe('AnimatedSplash - reduced motion', () => {
     const onFinish = jest.fn();
 
     render(<AnimatedSplash onFinish={onFinish} />);
-    // Let the asynchronous preference read land before the timers run.
     await act(async () => {});
     act(() => {
       jest.advanceTimersByTime(PAST_THE_FADE);
     });
 
-    // The handoff is on the same schedule; only the movement is dropped, so a
-    // user who asked for less motion is not left on the splash.
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
 });
@@ -75,8 +69,6 @@ describe('AnimatedSplash', () => {
     const onFinish = jest.fn();
     const { unmount } = render(<AnimatedSplash onFinish={onFinish} />);
 
-    // Exactly on the hold: the fade has been started but has not yet run a
-    // frame, so unmounting here interrupts it mid-animation.
     act(() => {
       jest.advanceTimersByTime(SPLASH_TIMING.hold);
     });

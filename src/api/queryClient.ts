@@ -15,13 +15,7 @@ import { isReportableError } from './pokeapi';
 import { isPersistedQueryKey } from './queryKeys';
 import { reportError } from './reportError';
 
-/**
- * One AsyncStorage key per query rather than one giant blob, which would hit
- * Android's ~2 MB SQLite CursorWindow per-row limit. Only the small queries in
- * `isPersistedQueryKey` are written: Pokémon detail (~200 KB) and move detail
- * (700+ learners on a popular TM) would fill Android's ~6 MB total budget while
- * browsing. Both still open from the in-memory cache within a session.
- */
+/** Persists allowlisted small queries to AsyncStorage, one key per query. */
 export const persister = experimental_createQueryPersister({
   storage: AsyncStorage,
   maxAge: CACHE_MAX_AGE,
@@ -29,19 +23,8 @@ export const persister = experimental_createQueryPersister({
   filters: { predicate: (query) => isPersistedQueryKey(query.queryKey) },
 });
 
-/**
- * The app's single QueryClient. Lives here rather than in the root route so the
- * route file stays about routing, and so tests can reset the cache between runs
- * without reaching into a screen module.
- */
+/** The app's single QueryClient. */
 export const queryClient = new QueryClient({
-  // Every query failure passes through here after its retries are spent, so a
-  // reporter installed once covers the whole app - present hooks and future
-  // ones alike - rather than needing an onError per call site.
-  //
-  // Filtered, though: a dropped connection is not a defect, and the type index
-  // alone would send nineteen reports from one offline launch. What is kept is
-  // the class of failure that means the API moved under us.
   queryCache: new QueryCache({
     onError: (error, query) => {
       if (isReportableError(error)) reportError(error, { queryKey: query.queryKey });
@@ -57,10 +40,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-/**
- * Drops every cached and persisted entry. Used by the one-time migration below
- * and by the test suite to isolate runs.
- */
+/** Removes cache entries written by earlier builds. */
 export async function purgeLegacyCacheKeys(): Promise<void> {
   const keys = await AsyncStorage.getAllKeys();
   const stale = keys.filter(

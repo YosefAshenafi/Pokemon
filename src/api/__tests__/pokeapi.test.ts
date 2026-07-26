@@ -29,11 +29,6 @@ function jsonResponse(body: unknown, status = 200) {
   } as Response;
 }
 
-/**
- * A complete `/pokemon` body. Responses are validated against the schema now,
- * so a stub has to be a real one - a partial object is exactly what the client
- * is supposed to reject.
- */
 function pokemonBody(overrides: Record<string, unknown> = {}) {
   return {
     id: 25,
@@ -51,7 +46,6 @@ function pokemonBody(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** A complete `/move` body, for the same reason. */
 function moveBody(overrides: Record<string, unknown> = {}) {
   return {
     id: 22,
@@ -148,14 +142,12 @@ describe('getPokemon', () => {
     const underlying = new TypeError('Network request failed');
     mockFetch.mockRejectedValue(underlying);
 
-    // Our wording is what the user reads; the cause is what a crash report needs.
     const error = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
 
     expect(error.cause).toBe(underlying);
   });
 
   it('reports a body that is not JSON as an ApiError rather than a SyntaxError', async () => {
-    // A proxy or captive portal answering 200 with an HTML error page.
     const invalid = new SyntaxError('Unexpected token < in JSON at position 0');
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -171,8 +163,6 @@ describe('getPokemon', () => {
   });
 
   it('rejects a well-formed response whose shape does not match the contract', async () => {
-    // Valid JSON, wrong shape: the case an `as Pokemon` cast would wave through
-    // and turn into a crash inside the detail screen's `stats.map`.
     mockFetch.mockResolvedValueOnce(jsonResponse(pokemonBody({ stats: undefined })));
 
     const error = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
@@ -182,8 +172,6 @@ describe('getPokemon', () => {
   });
 
   it('labels each failure with why it happened, not just what to show', async () => {
-    // The kind is what lets a caller tell "the user is on a train" from "the
-    // API changed shape", which read identically as messages.
     mockFetch.mockRejectedValueOnce(new TypeError('Network request failed'));
     const network = (await getPokemon('pikachu').catch((e: unknown) => e)) as ApiError;
     expect(network.kind).toBe('network');
@@ -224,8 +212,6 @@ describe('request safety', () => {
   it('percent-encodes a name so it cannot break out of its path', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({}, 404));
 
-    // A path-traversal-style name must stay a single, escaped path segment
-    // rather than climbing to another endpoint.
     await expect(getPokemon('../../../secret')).rejects.toBeInstanceOf(ApiError);
 
     const [url] = mockFetch.mock.calls[0];
@@ -245,8 +231,6 @@ describe('request safety', () => {
   it('aborts a request that never responds and reports a timeout', async () => {
     jest.useFakeTimers();
     try {
-      // Resolve only if the request is aborted, mimicking a dead socket that
-      // hangs until the client gives up.
       mockFetch.mockImplementation(
         (_url: string, options: { signal: AbortSignal }) =>
           new Promise((_resolve, reject) => {
@@ -276,7 +260,6 @@ describe('request safety', () => {
 
       await getPokemon('pikachu');
 
-      // The abort timer was cleared on success, so nothing is left to fire.
       expect(jest.getTimerCount()).toBe(0);
     } finally {
       jest.useRealTimers();
@@ -352,7 +335,6 @@ describe('buildPokemonTypeIndex', () => {
     expect(loader).toHaveBeenCalledTimes(POKEMON_TYPES.length);
     expect(loader.mock.calls.map(([type]) => type)).toEqual([...POKEMON_TYPES]);
     expect(index.bulbasaur).toEqual(['grass', 'poison']);
-    // Sorted by slot, not by the order the types were loaded.
     expect(index.foo).toEqual(['poison', 'grass']);
     expect(index.charmander).toEqual(['fire']);
   });
@@ -362,7 +344,6 @@ describe('buildPokemonTypeIndex', () => {
       type === 'poison' ? Promise.reject(new TypeError('boom')) : loadType(type),
     );
 
-    // Grass still resolves; the failed poison load just contributes nothing.
     expect(index.bulbasaur).toEqual(['grass']);
     expect(index.foo).toEqual(['grass']);
   });
@@ -379,11 +360,9 @@ describe('buildPokemonTypeIndex', () => {
     const index = await buildPokemonTypeIndex(loadType, onProgress);
 
     expect(onProgress).toHaveBeenCalled();
-    // Progress is only reported once there is real data, never as an empty map.
     for (const [partial] of onProgress.mock.calls) {
       expect(Object.keys(partial).length).toBeGreaterThan(0);
     }
-    // Every partial is a subset of the finished index.
     const [firstPartial] = onProgress.mock.calls[0];
     for (const name of Object.keys(firstPartial)) {
       expect(index[name]).toEqual(expect.arrayContaining(firstPartial[name]));

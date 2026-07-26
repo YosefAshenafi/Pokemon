@@ -8,13 +8,7 @@ interface ErrorStateProps {
   onRetry?: () => void;
 }
 
-/**
- * Friendly full-area error fallback with a retry action.
- *
- * Reads the connection itself rather than taking it as a prop: being offline is
- * a device-wide condition like the colour scheme, and threading it through
- * every screen that can fail would put the same boolean in four signatures.
- */
+/** Full-area error fallback with a retry action. */
 export function ErrorState({ message = 'Something went wrong.', onRetry }: ErrorStateProps) {
   const offline = useIsOffline();
 
@@ -26,12 +20,6 @@ export function ErrorState({ message = 'Something went wrong.', onRetry }: Error
       <Text className="text-center text-sm leading-5 text-ink-muted">
         {offline ? 'Reconnect to load this. Anything already saved still works.' : message}
       </Text>
-      {/*
-        No retry while offline: the request cannot succeed, so the button would
-        spend REQUEST_TIMEOUT_MS failing and teach the user it does nothing. The
-        banner disappears the moment the connection returns, and the retry with
-        it.
-      */}
       {onRetry && !offline ? (
         <Button mode="contained" onPress={onRetry} style={{ marginTop: 8 }}>
           Try again

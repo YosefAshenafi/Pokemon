@@ -11,24 +11,14 @@ interface ArtworkProps {
   id: number;
   alt: string;
   className?: string;
-  /**
-   * Dimensions the caller needs to be exact, e.g. a card whose row height is
-   * promised to a FlatList. Deliberately narrower than a full style prop: both
-   * the image and its pokéball fallback must honour it, and only box metrics
-   * are meaningful to both.
-   */
   style?: { width?: number; height?: number; marginTop?: number };
-  /** When the detail is already loaded, its sprite URLs are authoritative. */
   pokemon?: Pokemon;
   placeholderSize?: number;
 }
 
 const PLACEHOLDER_COLOR = 'rgba(154, 160, 181, 0.4)';
 
-/**
- * Pokémon artwork, falling back to the default sprite and then a pokéball -
- * mega/gmax forms (ids above 10000) have no official artwork.
- */
+/** Pokémon artwork, falling back to the sprite and then a drawn pokéball. */
 export function Artwork({
   id,
   alt,

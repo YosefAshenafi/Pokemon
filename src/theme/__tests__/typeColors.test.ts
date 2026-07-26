@@ -1,14 +1,12 @@
 import { darkColors, lightColors } from '../paperTheme';
 import { statColor, textColorOn, typeColor } from '../typeColors';
 
-/** WCAG relative luminance (2.x), the input to a contrast ratio. */
 function luminance(hex: string): number {
   const channels = [0, 2, 4].map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255);
   const [r, g, b] = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** WCAG contrast ratio between two hex colours, 1:1 to 21:1. */
 function contrastRatio(a: string, b: string): number {
   const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (light + 0.05) / (dark + 0.05);
@@ -35,8 +33,6 @@ describe('textColorOn', () => {
   });
 
   it('still answers for a background it has not seen before', () => {
-    // The answers for the app's own palette are precomputed; anything else has
-    // to fall through to the same calculation rather than to a default.
     expect(textColorOn('#FFFFFF')).toBe('#1B2137');
     expect(textColorOn('#000000')).toBe('#FFFFFF');
   });
@@ -60,12 +56,6 @@ describe('statColor', () => {
   });
 });
 
-/**
- * The text tokens are used at 11-14px, so WCAG AA asks 4.5:1 of them. Both
- * backgrounds are checked: `surface` is the card, `bg` is the screen behind it,
- * and `bg` is the lighter of the two in light mode - it is what actually
- * constrains how pale a grey can be.
- */
 describe('theme token contrast', () => {
   const AA_NORMAL_TEXT = 4.5;
 
@@ -83,8 +73,6 @@ describe('theme token contrast', () => {
   });
 
   it('keeps the two secondary greys distinguishable from one another', () => {
-    // Both sit near the AA floor, so it would be easy to "fix" contrast by
-    // collapsing the tier below `inkMuted` into it and losing the hierarchy.
     expect(contrastRatio(lightColors.inkMuted, lightColors.inkSubtle)).toBeGreaterThan(1.2);
     expect(contrastRatio(darkColors.inkMuted, darkColors.inkSubtle)).toBeGreaterThan(1.1);
   });

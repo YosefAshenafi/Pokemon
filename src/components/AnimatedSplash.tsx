@@ -7,24 +7,17 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { darkColors, lightColors } from '@/theme/paperTheme';
 
 const LOGO_SIZE = 140;
-const SPIN_MS = 1100; // one full rotation
-// Exactly one rotation. The previous 1400 held every cold start an extra
-// 300ms past the animation finishing, for no reason anyone could name.
+const SPIN_MS = 1100;
 const MIN_VISIBLE_MS = SPIN_MS;
 const FADE_MS = 350;
 
-/**
- * The handoff schedule, exported so a test can drive it without hardcoding the
- * numbers - which is how a timing change turns into a puzzling test failure
- * rather than an obvious one.
- */
 export const SPLASH_TIMING = { spin: SPIN_MS, hold: MIN_VISIBLE_MS, fade: FADE_MS } as const;
 
 interface AnimatedSplashProps {
   onFinish: () => void;
 }
 
-/** Full-screen splash that spins the pokéball logo, then fades into the app. */
+/** Full-screen splash that spins the logo, then fades into the app. */
 export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   const isDark = useColorScheme() === 'dark';
   const backgroundColor = isDark ? darkColors.bg : lightColors.bg;
@@ -46,8 +39,6 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
         useNativeDriver: true,
       }),
     );
-    // The spin is decoration; the handoff below still happens on the same
-    // schedule, so reduced motion costs the user nothing but the movement.
     if (!reducedMotion) loop.start();
 
     const timer = setTimeout(() => {
@@ -65,9 +56,6 @@ export function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
     return () => {
       clearTimeout(timer);
       loop.stop();
-      // Also stop the fade: clearing the timer only helps before it starts, so
-      // without this an unmount mid-fade would still run the completion
-      // callback and call `onFinish` on a component that is already gone.
       opacity.stopAnimation();
     };
   }, [spin, opacity, onFinish, reducedMotion]);

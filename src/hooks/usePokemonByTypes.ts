@@ -12,15 +12,9 @@ export interface TypeFilterResult {
   refetch: () => void;
 }
 
-/**
- * Keeps only the Pokémon present in EVERY selected type's list, in the first
- * one's National Dex order. At module scope so its reference is stable, which
- * is what lets React Query structurally share `data` across renders.
- */
 function combineTypeResults(results: UseQueryResult<TypeMember[], Error>[]): TypeFilterResult {
   let data: PokemonSummary[] = [];
   const lists = results.map((r) => r.data).filter((l): l is TypeMember[] => l !== undefined);
-  // Wait for every type, so partial results never leak through as matches.
   if (results.length > 0 && lists.length === results.length) {
     const [first, ...rest] = lists;
     const otherIdSets = rest.map((list) => new Set(list.map((p) => p.id)));
@@ -34,11 +28,7 @@ function combineTypeResults(results: UseQueryResult<TypeMember[], Error>[]): Typ
   };
 }
 
-/**
- * Pokémon belonging to ALL of the given types, backing the multi-select filter.
- * An empty selection yields an empty, non-loading result. These are the same
- * cache entries the type index builds from, so a type is downloaded once.
- */
+/** Pokémon belonging to ALL of the given types, backing the type filter. */
 export function usePokemonByTypes(types: PokemonType[]): TypeFilterResult {
   return useQueries({
     queries: types.map((type) => ({

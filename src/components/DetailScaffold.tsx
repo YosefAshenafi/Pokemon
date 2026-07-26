@@ -11,22 +11,13 @@ import { ScreenHeader } from './ScreenHeader';
 interface DetailScaffoldProps {
   isLoading: boolean;
   isError: boolean;
-  /** Announced while the spinner is up; names what is being loaded. */
   loadingLabel: string;
   errorMessage: string;
   onRetry: () => void;
   children: ReactNode;
 }
 
-/**
- * The frame every detail screen shares: brand header with a back control, then
- * one of a spinner, an error with a retry, or the screen's own content in a
- * scroll view.
- *
- * Extracted because the Pokémon and move screens had the same twenty lines,
- * and a third detail screen would have made it three copies. Each screen now
- * contributes only what makes it different.
- */
+/** The frame every detail screen shares: header, then loading, error or content. */
 export function DetailScaffold({
   isLoading,
   isError,

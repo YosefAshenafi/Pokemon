@@ -4,10 +4,6 @@ import { SKELETON_COUNT } from '@/constants/ui';
 
 import { SkeletonCard } from './SkeletonCard';
 
-/**
- * A screenful of skeleton cards in the same two-column layout as the real grid,
- * so the first page lands without the content shifting.
- */
 export function SkeletonGrid() {
   return (
     <View className="flex-row flex-wrap justify-between px-4 pt-4">

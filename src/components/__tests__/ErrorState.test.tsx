@@ -45,8 +45,6 @@ describe('ErrorState - offline', () => {
     act(() => setNetworkOffline(true));
 
     expect(screen.getByText('No connection')).toBeTruthy();
-    // The per-request wording would be a red herring: nothing is wrong with the
-    // Pokédex, and the user cannot act on that sentence.
     expect(screen.queryByText('The Pokédex could not be loaded.')).toBeNull();
   });
 

@@ -1,16 +1,3 @@
-/**
- * A fake PokeAPI *server*, installed at the `globalThis.fetch` boundary.
- *
- * This is the only seam the test suite fakes. Everything above it runs for
- * real: `src/api/pokeapi.ts`, every hook, React Query, the Expo Router stack
- * and all components. Nothing under `src/` is ever `jest.mock`ed - swapping the
- * network is the equivalent of pointing an integration suite at a test server
- * rather than production.
- *
- * It serves a 31-entry dex in National Dex order, so that with the client's
- * PAGE_SIZE of 24 there are exactly two pages and pagination is observable.
- */
-
 const BASE = 'https://pokeapi.co/api/v2';
 const SPRITES =
   'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
@@ -19,21 +6,16 @@ interface DexEntry {
   id: number;
   name: string;
   types: string[];
-  /** Decimetres, as PokeAPI reports it. */
   height: number;
-  /** Hectograms, as PokeAPI reports it. */
   weight: number;
-  /** hp, attack, defense, special-attack, special-defense, speed */
   stats: [number, number, number, number, number, number];
   moves: string[];
-  /** Mega/gmax forms have no official artwork; some have no sprite at all. */
   artwork?: boolean;
   sprite?: boolean;
 }
 
 const BASIC_MOVES = ['tackle', 'growl', 'scratch', 'ember'];
 
-/** Enough moves to push a Pokémon past the detail screen's 8-move preview. */
 const MANY_MOVES = [
   'razor-wind', 'swords-dance', 'cut', 'bind', 'vine-whip', 'headbutt',
   'tackle', 'body-slam', 'take-down', 'double-edge', 'growl', 'strength',
@@ -64,16 +46,13 @@ export const DEX: DexEntry[] = [
   { id: 22, name: 'fearow', types: ['normal', 'flying'], height: 12, weight: 380, stats: [65, 90, 65, 61, 61, 100], moves: BASIC_MOVES },
   { id: 23, name: 'ekans', types: ['poison'], height: 20, weight: 69, stats: [35, 60, 44, 40, 54, 55], moves: BASIC_MOVES },
   { id: 24, name: 'arbok', types: ['poison'], height: 35, weight: 650, stats: [60, 95, 69, 65, 79, 80], moves: BASIC_MOVES },
-  // Page 2 starts here.
   { id: 25, name: 'pikachu', types: ['electric'], height: 4, weight: 60, stats: [35, 55, 40, 50, 50, 90], moves: MANY_MOVES },
   { id: 26, name: 'raichu', types: ['electric'], height: 8, weight: 300, stats: [60, 90, 55, 90, 80, 110], moves: BASIC_MOVES },
   { id: 27, name: 'sandshrew', types: ['ground'], height: 6, weight: 120, stats: [50, 75, 85, 20, 30, 40], moves: BASIC_MOVES },
   { id: 28, name: 'sandslash', types: ['ground'], height: 10, weight: 295, stats: [75, 100, 110, 45, 55, 65], moves: BASIC_MOVES },
   { id: 29, name: 'nidoran-f', types: ['poison'], height: 4, weight: 70, stats: [55, 47, 52, 40, 40, 41], moves: BASIC_MOVES },
   { id: 30, name: 'nidorina', types: ['poison'], height: 8, weight: 200, stats: [70, 62, 67, 55, 55, 56], moves: BASIC_MOVES },
-  // A mega form: ids above 10000 have no official artwork, only a sprite.
   { id: 10033, name: 'venusaur-mega', types: ['grass', 'poison'], height: 24, weight: 1555, stats: [80, 100, 123, 122, 120, 80], moves: BASIC_MOVES, artwork: false },
-  // A form with neither artwork nor sprite, so the pokéball placeholder shows.
   { id: 10034, name: 'charizard-mega-x', types: ['fire', 'dragon'], height: 17, weight: 1105, stats: [78, 130, 111, 130, 85, 100], moves: BASIC_MOVES, artwork: false, sprite: false },
 ];
 
@@ -88,9 +67,7 @@ interface MoveFixture {
   pp: number | null;
   effectChance: number | null;
   effect: string;
-  /** Defaults to English; set to another language to exercise the fallback. */
   language?: string;
-  /** Some older moves carry no effect text at all. */
   noEffectEntries?: boolean;
 }
 
@@ -99,13 +76,9 @@ const MOVE_DATA: Record<string, MoveFixture> = {
   growl: { id: 45, type: 'normal', damageClass: 'status', power: null, accuracy: 100, pp: 40, effectChance: null, effect: "Lowers the target's Attack by one stage." },
   ember: { id: 52, type: 'fire', damageClass: 'special', power: 40, accuracy: 100, pp: 25, effectChance: 10, effect: 'Has a $effect_chance% chance to burn the target.' },
   'vine-whip': { id: 22, type: 'grass', damageClass: 'physical', power: 45, accuracy: 100, pp: 25, effectChance: null, effect: 'Inflicts regular damage.' },
-  // A move that never misses and has no damage class, exercising the em-dash paths.
   swift: { id: 129, type: 'normal', damageClass: null, power: 60, accuracy: null, pp: 20, effectChance: null, effect: 'Never misses.' },
-  // Unlimited PP, so every fact box can be blank at once.
   struggle: { id: 165, type: 'normal', damageClass: 'physical', power: null, accuracy: null, pp: null, effectChance: null, effect: 'Used when out of PP.' },
-  // No English entry, so the screen must fall back to the first one there is.
   'karate-chop': { id: 2, type: 'fighting', damageClass: 'physical', power: 50, accuracy: 100, pp: 25, effectChance: null, effect: '急所に当たりやすい。', language: 'ja' },
-  // No effect text at all, so the Effect card must be omitted entirely.
   'mystery-move': { id: 999, type: 'normal', damageClass: 'physical', power: 30, accuracy: 90, pp: 15, effectChance: null, effect: '', noEffectEntries: true },
 };
 
@@ -161,15 +134,10 @@ function moveDetail(name: string) {
 }
 
 export interface FakePokeApi {
-  /** Every URL the app requested, in order. */
   requests: string[];
-  /** When true, every request rejects the way a dead connection does. */
   offline: boolean;
-  /** `/type/<name>` requests for these types respond 500. */
   failingTypes: Set<string>;
-  /** Any request whose URL contains one of these responds 404. */
   missing: Set<string>;
-  /** Requests matching these resolve only when `release()` is called. */
   hold: Set<string>;
   release(): void;
   restore(): void;
@@ -183,10 +151,7 @@ function jsonResponse(body: unknown, status = 200): Response {
   } as Response;
 }
 
-/**
- * Installs the fake server on `globalThis.fetch` and returns a handle for
- * steering it (going offline, failing a type, holding a response open).
- */
+/** Installs a fake PokeAPI server on `globalThis.fetch` - the only seam tests fake. */
 export function installFakePokeApi(): FakePokeApi {
   const originalFetch = globalThis.fetch;
   const pending: (() => void)[] = [];
@@ -221,7 +186,6 @@ export function installFakePokeApi(): FakePokeApi {
 
     const path = url.replace(`${BASE}/`, '');
 
-    // /pokemon?offset=N&limit=M - the paginated dex and the full name index.
     const listMatch = /^pokemon\?offset=(\d+)&limit=(\d+)$/.exec(path);
     if (listMatch) {
       const offset = Number(listMatch[1]);
@@ -234,7 +198,6 @@ export function installFakePokeApi(): FakePokeApi {
       });
     }
 
-    // /type/<name>
     const typeMatch = /^type\/([^/?]+)$/.exec(path);
     if (typeMatch) {
       const type = decodeURIComponent(typeMatch[1]);
@@ -242,7 +205,6 @@ export function installFakePokeApi(): FakePokeApi {
       const members = DEX.filter((entry) => entry.types.includes(type));
       if (members.length === 0) return jsonResponse({ detail: 'Not found.' }, 404);
       return jsonResponse({
-        // Deliberately unsorted, so the client's own id sort is what orders it.
         pokemon: [...members].reverse().map((entry) => ({
           slot: entry.types.indexOf(type) + 1,
           pokemon: pokemonResource(entry),
@@ -250,7 +212,6 @@ export function installFakePokeApi(): FakePokeApi {
       });
     }
 
-    // /pokemon/<name-or-id>
     const detailMatch = /^pokemon\/([^/?]+)$/.exec(path);
     if (detailMatch) {
       const key = decodeURIComponent(detailMatch[1]);
@@ -258,7 +219,6 @@ export function installFakePokeApi(): FakePokeApi {
       return entry ? jsonResponse(pokemonDetail(entry)) : jsonResponse({ detail: 'Not found.' }, 404);
     }
 
-    // /move/<name>
     const moveMatch = /^move\/([^/?]+)$/.exec(path);
     if (moveMatch) {
       const key = decodeURIComponent(moveMatch[1]);
@@ -271,7 +231,6 @@ export function installFakePokeApi(): FakePokeApi {
   return api;
 }
 
-/** The dex entries a `/type/<type>` roster contains, in the order the app shows them. */
 export function dexByType(...types: string[]): DexEntry[] {
   return DEX.filter((entry) => types.every((type) => entry.types.includes(type)));
 }

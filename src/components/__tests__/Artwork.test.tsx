@@ -4,7 +4,6 @@ import type { Pokemon } from '@/api/types';
 
 import { Artwork } from '../Artwork';
 
-/** The minimum of a detail response that `Artwork` reads. */
 function pokemonWith(officialArtwork: string | null, frontDefault: string | null): Pokemon {
   return {
     id: 10033,
@@ -21,7 +20,6 @@ function pokemonWith(officialArtwork: string | null, frontDefault: string | null
   } as unknown as Pokemon;
 }
 
-/** expo-image normalises a string source into `[{ uri }]`, so match on the JSON. */
 const source = () => JSON.stringify(screen.getByTestId('pokemon-artwork').props.source);
 
 describe('Artwork', () => {

@@ -29,7 +29,6 @@ describe('Pokeball', () => {
     expect(style.width).toBe(56);
     expect(style.height).toBe(56);
     expect(style.borderRadius).toBe(28);
-    // 9% of the size, rounded.
     expect(style.borderWidth).toBe(5);
   });
 

@@ -8,7 +8,6 @@ interface TypeChipProps {
   size?: 'sm' | 'md';
 }
 
-/** Pill badge tinted with the canonical color of a Pokémon type. */
 export function TypeChip({ type, size = 'sm' }: TypeChipProps) {
   const background = typeColor(type);
   return (

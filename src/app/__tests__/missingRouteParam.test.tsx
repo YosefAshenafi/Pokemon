@@ -7,14 +7,6 @@ import RootLayout from '../_layout';
 import MoveScreen from '../move/[name]';
 import DetailScreen from '../pokemon/[name]';
 
-/**
- * Both detail screens guard against a missing `name` param. The router supplies
- * one whenever `/pokemon/[name]` or `/move/[name]` matches, so the guard is only
- * reachable by mounting the same screen at a route that has no such segment -
- * which is exactly what these tests do, through the real router and the real
- * root layout.
- */
-
 let api: FakePokeApi;
 
 beforeEach(() => {

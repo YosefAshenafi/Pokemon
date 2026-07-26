@@ -1,20 +1,11 @@
 import { MD3DarkTheme, MD3LightTheme, type MD3Theme } from 'react-native-paper';
 
-/**
- * The design tokens read from JavaScript: the Paper themes below and the few
- * inline styles that can't use a class. NativeWind's copy of the same palette
- * lives in `src/global.css` - keep the two in sync.
- */
 export const lightColors = {
   brand: '#2D50C8',
   brandDark: '#22409F',
   bg: '#F6F7FC',
   surface: '#FFFFFF',
   ink: '#1B2137',
-  // Both greys clear WCAG AA (4.5:1) against `bg`, the lighter of the two
-  // backgrounds they sit on. `bg` caps a passing grey at about #6A7190, so
-  // `inkMuted` moves darker to keep the two tiers apart. Asserted in
-  // `theme/__tests__/typeColors.test.ts`.
   inkMuted: '#545B78',
   inkSubtle: '#666D8B',
   track: '#EEF0F7',
@@ -59,7 +50,6 @@ export const paperDarkTheme: MD3Theme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    // Brand blue is too dark for text on dark surfaces; use a lighter tint.
     primary: '#9FB2F5',
     onPrimary: '#101736',
     primaryContainer: darkColors.brandDark,

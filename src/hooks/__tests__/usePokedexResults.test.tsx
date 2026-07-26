@@ -21,11 +21,6 @@ beforeEach(async () => {
   const defaults = queryClient.getDefaultOptions();
   queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
 
-  // Seeded, not fetched. These tests are about how results are *composed*, and
-  // the hook mounts four queries regardless of which one a test is asking
-  // about; left to fetch, the other three would still be resolving after the
-  // assertion had run. The composition rules are the same either way, and the
-  // wiring is covered end-to-end by the list screen tests.
   queryClient.setQueryData(queryKeys.typeIndex, {});
   queryClient.setQueryData(queryKeys.list, {
     pages: [{ pokemon: [{ id: 1, name: 'bulbasaur' }], count: 1, nextOffset: null }],
@@ -57,7 +52,6 @@ function filters(overrides: Partial<PokedexFilters> = {}): PokedexFilters {
   };
 }
 
-/** A name index large enough to push a one-letter search past the render cap. */
 function seedLargeNameIndex(matching: number): PokemonSummary[] {
   const names: PokemonSummary[] = Array.from({ length: matching }, (_, i) => ({
     id: i + 1,
@@ -89,14 +83,10 @@ describe('usePokedexResults', () => {
     );
 
     await waitFor(() => expect(result.current.data.length).toBe(SEARCH_RESULT_LIMIT));
-    // Every match is on screen, so the "refine your search" notice would be a lie.
     expect(result.current.isTruncated).toBe(false);
   });
 
   it('leaves the paginated Pokédex uncapped', async () => {
-    // Seeded rather than fetched: the cap is a property of search, and a page
-    // of the dex could exceed it as the user scrolls without that ever meaning
-    // matches were hidden.
     const page = Array.from({ length: SEARCH_RESULT_LIMIT + 20 }, (_, i) => ({
       id: i + 1,
       name: `dexmon-${i}`,

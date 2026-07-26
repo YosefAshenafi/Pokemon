@@ -19,7 +19,6 @@ describe('searchPokemonIndex', () => {
   });
 
   it('ranks name prefix matches before substring matches', () => {
-    // "char" prefixes charmander/charmeleon; nothing here is a substring-only match.
     expect(names(searchPokemonIndex(INDEX, 'char'))).toEqual(['charmander', 'charmeleon']);
   });
 
@@ -28,7 +27,6 @@ describe('searchPokemonIndex', () => {
   });
 
   it('matches Pokédex numbers by id, ordered by id', () => {
-    // "25" prefixes ids 25, 250, 251.
     expect(names(searchPokemonIndex(INDEX, '25'))).toEqual(['pikachu', 'ho-oh', 'celebi']);
   });
 
@@ -41,10 +39,6 @@ describe('searchPokemonIndex', () => {
     expect(names(searchPokemonIndex(INDEX, '1'))).toEqual(['bulbasaur']);
   });
 
-  // The screen caps what it renders, but it does so *after* intersecting these
-  // results with the type filter. Capping here instead would hand the
-  // intersection a truncated set and let it report "nothing found" for a term
-  // whose matching Pokémon sit further down the ranking.
   it('returns every match rather than a screenful, so a caller can filter them', () => {
     const many: PokemonSummary[] = Array.from({ length: 300 }, (_, i) => ({
       id: i + 1,

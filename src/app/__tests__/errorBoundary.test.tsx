@@ -9,12 +9,6 @@ afterEach(() => {
   resetSystemColorScheme();
 });
 
-/**
- * The boundary Expo Router mounts in place of a route whose render threw. It is
- * exercised directly rather than by throwing inside the router: what matters is
- * that the fallback is usable and offers a way back, and driving it through a
- * real crash would only add React's own error logging to the run.
- */
 describe('ErrorBoundary', () => {
   it('explains the failure instead of leaving a blank screen', () => {
     render(<ErrorBoundary error={new Error('stats is undefined')} retry={jest.fn()} />);
@@ -30,8 +24,6 @@ describe('ErrorBoundary', () => {
 
     render(<ErrorBoundary error={error} retry={jest.fn()} />);
 
-    // "undefined is not a function" tells a user nothing and anyone else a
-    // little too much; the detail belongs where an engineer will read it.
     expect(screen.queryByText(/stats is undefined/)).toBeNull();
     expect(reporter).toHaveBeenCalledWith(error, expect.objectContaining({ boundary: 'root' }));
     setErrorReporter(null);

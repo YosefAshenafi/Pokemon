@@ -10,23 +10,13 @@ import { TypeChip } from './TypeChip';
 interface PokemonCardProps {
   id: number;
   name: string;
-  /** `undefined` while the type index is still building, `[]` once it settled. */
   types?: readonly string[];
   onPress: (name: string) => void;
   onPressIn?: (name: string) => void;
-  /** System font scale, so the card matches the row height the list reserved. */
   fontScale: number;
 }
 
-/**
- * Grid card for the list screen. Purely presentational - artwork comes from the
- * id and types are passed in - so it stays cheap to render during fast scroll.
- *
- * The load-bearing dimensions come from `CARD_METRICS` rather than utility
- * classes, because `PokemonGrid` computes `getItemLayout` from those same
- * numbers: what is rendered and what is promised to FlatList have to share one
- * source, or the promise breaks silently the next time a padding changes.
- */
+/** Grid card for the list screen; dimensions come from CARD_METRICS. */
 export const PokemonCard = memo(function PokemonCard({
   id,
   name,
@@ -56,12 +46,6 @@ export const PokemonCard = memo(function PokemonCard({
         className="flex-row items-center justify-between gap-1"
         style={{ height: titleHeight }}
       >
-        {/*
-          `lineHeight` is set, not inherited from the font: it is the same
-          number the row height is computed from, so the text cannot render
-          taller than the space reserved for it on a device whose default font
-          differs from the one this was designed against.
-        */}
         <Text
           className="flex-1 text-[13px] font-semibold text-ink"
           numberOfLines={1}

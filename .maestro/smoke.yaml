@@ -1,42 +1,25 @@
-# The one flow unit tests cannot cover: that the built app launches on a device
-# and its core path works end to end. Everything below runs against the real
-# PokeAPI, so it needs a network.
-#
-# Run with a simulator or device attached, and the app installed (a real build
-# via `npx expo run:ios` / `run:android` - under Expo Go the appId below does
-# not exist):
-#   maestro test .maestro/smoke.yaml
-#
-# Text matchers are regexes that must match the WHOLE node. List cards expose
-# one label - "Bulbasaur, #001" - so bare names take a trailing `.*`.
+# Needs a real build installed (npx expo run:ios / run:android) - this appId
+# does not exist under Expo Go.
 appId: com.jossyfreelancer.pokedex
 ---
 - launchApp:
     clearState: true
 
-# A cold start with no cache: the splash hands off and the first page arrives.
 - extendedWaitUntil:
     visible: 'Bulbasaur.*'
     timeout: 30000
 
-# Search narrows the grid to a name typed by hand. The field is addressed by
-# its accessibility label, not its placeholder - the placeholder disappears on
-# focus, the label never does.
 - tapOn: 'Search Pokémon by name or number'
 - inputText: 'pika'
 - extendedWaitUntil:
     visible: 'Pikachu.*'
     timeout: 10000
 
-# Detail opens with the sections that depend on a second request.
 - tapOn: 'Pikachu.*'
 - extendedWaitUntil:
     visible: 'Base Stats'
     timeout: 20000
 - assertVisible: 'Breeding'
 
-# ...and the stack unwinds to the search that was still active. Tapping the
-# labelled control rather than `back`, which is an Android hardware key and
-# does not exist on iOS.
 - tapOn: 'Go back'
 - assertVisible: 'Pikachu.*'

@@ -43,7 +43,6 @@ describe('List screen - search', () => {
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);
 
-    // No Pokémon starts with "saur", so every hit here is a substring match.
     search('saur');
 
     await waitFor(() => expect(screen.getByText('Bulbasaur')).toBeTruthy(), SETTLE);
@@ -94,7 +93,6 @@ describe('List screen - type filter', () => {
     fireEvent.press(await screen.findByLabelText('Grass type', {}, SETTLE));
     fireEvent.press(screen.getByLabelText('Poison type'));
 
-    // Bulbasaur is Grass AND Poison; Ekans is Poison only; Charmander is neither.
     await waitFor(() => expect(screen.getByText('Bulbasaur')).toBeTruthy(), SETTLE);
     expect(screen.queryByText('Ekans')).toBeNull();
     expect(screen.queryByText('Charmander')).toBeNull();
@@ -132,8 +130,6 @@ describe('List screen - type filter', () => {
     fireEvent.press(await screen.findByLabelText('Grass type', {}, SETTLE));
     fireEvent.press(screen.getByLabelText('Poison type'));
 
-    // The remaining chips say why they do nothing, rather than letting a third
-    // selection produce a permanently empty grid.
     const fire = screen.getByLabelText('Fire type');
     expect(fire.props.accessibilityState).toMatchObject({ disabled: true });
 

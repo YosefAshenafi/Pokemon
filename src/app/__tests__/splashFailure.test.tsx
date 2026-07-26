@@ -2,12 +2,6 @@ import { screen } from 'expo-router/testing-library';
 
 import { renderApp, setupFakeApi } from '@/test/renderApp';
 
-/**
- * The root layout calls `SplashScreen.preventAutoHideAsync()` at module scope
- * and swallows any rejection, so a splash-screen failure can never stop the app
- * booting. This file mocks the native module to reject, in its own module
- * registry so the module-scope call runs against the rejecting version.
- */
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn().mockRejectedValue(new Error('no native splash')),
   hideAsync: jest.fn().mockRejectedValue(new Error('no native splash')),

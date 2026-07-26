@@ -3,7 +3,6 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPokemonPage } from '@/api/pokeapi';
 import { queryKeys } from '@/api/queryKeys';
 
-/** Paginated Pokédex list for the home screen's infinite scroll. */
 export function usePokemonList() {
   return useInfiniteQuery({
     queryKey: queryKeys.list,

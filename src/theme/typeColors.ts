@@ -1,6 +1,5 @@
 import type { PokemonType } from '@/api/types';
 
-// Typed against `PokemonType` so a missing or stray key is a compile error.
 const TYPE_COLORS: Record<PokemonType, string> = {
   normal: '#A8A77A',
   fire: '#EE8130',
@@ -22,7 +21,6 @@ const TYPE_COLORS: Record<PokemonType, string> = {
   fairy: '#D685AD',
 };
 
-/** Neutral grey for a type or stat key the API sends that we don't have a colour for. */
 const FALLBACK_COLOR = '#8A8FA3';
 
 export function typeColor(type: string): string {
@@ -34,19 +32,10 @@ function readableOn(background: string): string {
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);
-  // Perceived luminance (ITU-R BT.709)
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
   return luminance > 0.6 ? '#1B2137' : '#FFFFFF';
 }
 
-/**
- * One fixed colour per stat row, keyed by the raw PokéAPI stat name.
- *
- * Colouring by which stat it is rather than by how large the value is keeps a
- * row's colour stable across Pokémon, so the six bars stay readable as six
- * distinct stats. Grading by value instead would render a whole early-route
- * Pokémon in a single band - Bulbasaur's stats top out at 65 - and lose that.
- */
 const STAT_COLORS: Record<string, string> = {
   hp: '#5FBD58',
   attack: '#EC6A5E',
@@ -56,27 +45,17 @@ const STAT_COLORS: Record<string, string> = {
   speed: '#EF8C50',
 };
 
-/** Colour for a base-stat bar, e.g. `special-attack` → blue. */
 export function statColor(stat: string): string {
   return STAT_COLORS[stat.toLowerCase()] ?? FALLBACK_COLOR;
 }
 
-/**
- * Every background this app actually paints text on, resolved once at module
- * load. A grid can hold dozens of chips re-rendering on each scroll batch, and
- * they only ever ask about these colours - so the answers are computed up front
- * rather than accumulated in a cache that nothing bounds.
- */
 const FOREGROUNDS: Record<string, string> = Object.fromEntries(
   [...Object.values(TYPE_COLORS), ...Object.values(STAT_COLORS), FALLBACK_COLOR].map(
     (background) => [background, readableOn(background)],
   ),
 );
 
-/**
- * Picks a readable text color for a given background so light chips
- * (electric, ice, ground, etc.) don't end up with unreadable white text.
- */
+/** Readable text colour for a given background. */
 export function textColorOn(background: string): string {
   return FOREGROUNDS[background] ?? readableOn(background);
 }

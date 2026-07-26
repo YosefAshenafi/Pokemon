@@ -4,15 +4,12 @@ import { STAT_BAR_MAX } from '@/constants/ui';
 import { statColor } from '@/theme/typeColors';
 
 interface StatBarProps {
-  /** Raw PokéAPI stat name (`special-attack`, not `Sp. Atk`); picks the bar colour. */
   stat: string;
   label: string;
   value: number;
-  /** Scale ceiling for the bar; defaults to `STAT_BAR_MAX`. */
   max?: number;
 }
 
-/** Horizontal base-stat bar, with a colour of its own per stat. */
 export function StatBar({ stat, label, value, max = STAT_BAR_MAX }: StatBarProps) {
   const percent = Math.min(value / max, 1) * 100;
 

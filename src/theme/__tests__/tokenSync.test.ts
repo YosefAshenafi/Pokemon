@@ -3,16 +3,8 @@ import { join } from 'path';
 
 import { darkColors, lightColors } from '../paperTheme';
 
-/**
- * The palette exists twice: as CSS variables the Tailwind classes resolve
- * through, and as the TypeScript objects Paper and the inline styles read. Two
- * sources are unavoidable - NativeWind classes cannot be read from JS, and
- * Paper's theme cannot be expressed as a class - but a comment asking the next
- * person to keep them in sync is not a mechanism. This is.
- */
 const css = readFileSync(join(__dirname, '../../global.css'), 'utf8');
 
-/** CSS custom property -> the key holding the same colour in the TS palettes. */
 const TOKEN_MAP = {
   '--color-bg': 'bg',
   '--color-surface': 'surface',
@@ -24,10 +16,6 @@ const TOKEN_MAP = {
   '--color-accent': 'accent',
 } as const satisfies Record<string, keyof typeof lightColors>;
 
-/**
- * The variables declared in one scheme's block. The light values sit in the
- * first `:root`; the dark ones in the `:root` inside the media query.
- */
 function declaredVariables(scheme: 'light' | 'dark'): Record<string, string> {
   const [light, dark] = css.split('@media');
   const block = scheme === 'light' ? light : dark;
@@ -48,8 +36,6 @@ describe('design token sync', () => {
   });
 
   it('declares every mapped variable in both schemes', () => {
-    // Guards the mapping itself: a renamed variable would otherwise make every
-    // comparison above compare `undefined` to `undefined` and quietly pass.
     for (const scheme of ['light', 'dark'] as const) {
       const variables = declaredVariables(scheme);
       for (const cssName of Object.keys(TOKEN_MAP)) {

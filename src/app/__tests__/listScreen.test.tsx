@@ -12,7 +12,6 @@ import {
 
 const getApi = setupFakeApi();
 
-/** The type index runs 18 requests in batches, so give it room to settle. */
 const SETTLE = { timeout: 15000 };
 const TIMEOUT = 30000;
 
@@ -32,9 +31,6 @@ describe('List screen', () => {
 
     await screen.findByText('Bulbasaur', {}, SETTLE);
 
-    // The index publishes in batches of six, so the chips of a dual-type
-    // Pokémon can land on different renders: Grass is in the first batch,
-    // Poison in the second.
     await waitFor(() => expect(screen.getAllByText('Fire').length).toBeGreaterThan(0), SETTLE);
     await waitFor(() => expect(screen.getAllByText('Grass').length).toBeGreaterThan(0), SETTLE);
     await waitFor(() => expect(screen.getAllByText('Poison').length).toBeGreaterThan(0), SETTLE);
@@ -68,7 +64,6 @@ describe('List screen', () => {
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);
 
-    // 31 entries at 24 per page: the second page is the last one.
     scrollToEnd();
     await waitFor(
       () => expect(getApi().requests.some((url) => url.includes('offset=24&limit=24'))).toBe(true),
@@ -107,7 +102,6 @@ describe('List screen', () => {
 
     await pullToRefresh();
 
-    // Page one came back...
     await waitFor(
       () =>
         expect(
@@ -115,8 +109,6 @@ describe('List screen', () => {
         ).toBeGreaterThan(1),
       SETTLE,
     );
-    // ...and page two did not, because refresh collapses to the first page
-    // first. Without that, a pull at Pokémon #700 would refetch ~29 pages.
     expect(getApi().requests.filter((url) => url.includes('offset=24&limit=24'))).toHaveLength(1);
   }, TIMEOUT);
 
@@ -127,8 +119,6 @@ describe('List screen', () => {
     const NAME_INDEX = 'limit=100000';
     expect(getApi().requests.some((url) => url.includes(NAME_INDEX))).toBe(false);
 
-    // Focus, not the first keystroke: the ~1300-name index downloads while the
-    // user is still reaching for the keyboard.
     fireEvent(screen.getByLabelText('Search Pokémon by name or number'), 'focus');
 
     await waitFor(
@@ -162,7 +152,6 @@ describe('List screen - work in progress', () => {
     renderApp();
 
     expect(await screen.findByText('Bulbasaur', {}, SETTLE)).toBeTruthy();
-    // The index is in flight, so the cards know types are coming but not which.
     expect(screen.getAllByTestId('type-chip-placeholder').length).toBeGreaterThan(0);
 
     getApi().hold.clear();
@@ -189,8 +178,6 @@ describe('List screen - work in progress', () => {
 
 describe('List screen - failure handling', () => {
   it('explains a type filter that could not be loaded', async () => {
-    // Fail from the start: the type index reads the same cache entry, so a type
-    // that loaded at boot would still filter fine from cache.
     getApi().failingTypes.add('fire');
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);
@@ -219,7 +206,6 @@ describe('List screen - failure handling', () => {
     getApi().failingTypes.clear();
     fireEvent.press(screen.getByText('Try again'));
 
-    // Both the Pokédex and the index recover from the one retry.
     await waitFor(() => expect(screen.getByText('Bulbasaur')).toBeTruthy(), SETTLE);
     await waitFor(() => expect(screen.getAllByText('Grass').length).toBeGreaterThan(0), SETTLE);
   }, TIMEOUT);
@@ -243,7 +229,6 @@ describe('List screen - failure handling', () => {
 
     expect(await screen.findByText('Bulbasaur', {}, SETTLE)).toBeTruthy();
 
-    // Degrade, don't block: no chips, but the Pokédex itself is fully usable.
     await waitFor(
       () => expect(screen.queryAllByTestId('type-chip-placeholder')).toHaveLength(0),
       SETTLE,

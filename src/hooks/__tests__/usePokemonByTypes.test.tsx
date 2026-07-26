@@ -13,8 +13,6 @@ let api: FakePokeApi;
 beforeEach(async () => {
   api = installFakePokeApi();
   queryClient.clear();
-  // Type rosters are on the persistence allowlist, so clearing only the
-  // in-memory cache would let the persister restore a previous test's data.
   await AsyncStorage.clear();
   const defaults = queryClient.getDefaultOptions();
   queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
@@ -52,7 +50,6 @@ describe('usePokemonByTypes', () => {
 
     await waitFor(() => expect(result.current.data.length).toBeGreaterThan(0));
 
-    // Grass ∩ Poison - Ekans is Poison alone, Charmander is neither.
     expect(result.current.data.map((p) => p.name)).toEqual([
       'bulbasaur',
       'ivysaur',
@@ -75,7 +72,6 @@ describe('usePokemonByTypes', () => {
     const { result } = renderHook(() => usePokemonByTypes(['grass', 'poison']), { wrapper });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    // No partial results leak through while one roster is missing.
     expect(result.current.data).toEqual([]);
   });
 

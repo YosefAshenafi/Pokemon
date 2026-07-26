@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native';
 
 import { StatBar } from '../StatBar';
 
-/** Flattened style of the coloured fill sitting inside the track. */
 const fill = () => StyleSheet.flatten(screen.getByTestId('stat-bar-fill').props.style);
 
 describe('StatBar', () => {

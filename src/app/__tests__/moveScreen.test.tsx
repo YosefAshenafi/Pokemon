@@ -39,7 +39,6 @@ describe('Move screen', () => {
     renderApp('/move/swift');
 
     expect(await screen.findByText('Swift', {}, SETTLE)).toBeTruthy();
-    // Accuracy is null on a never-miss move, so only that box shows a dash.
     expect(screen.getByText('—')).toBeTruthy();
     expect(screen.queryByText('Physical')).toBeNull();
     expect(screen.queryByText('Status')).toBeNull();

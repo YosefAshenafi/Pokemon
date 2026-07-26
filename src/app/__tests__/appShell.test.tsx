@@ -21,7 +21,6 @@ describe('App shell', () => {
   it('shows the animated splash over the app while it boots', async () => {
     renderApp();
 
-    // The tree stays behind a blank gate until the cache migration resolves.
     await waitFor(() => expect(splash()).toBeTruthy(), SETTLE);
     expect(await screen.findByText(/Who are you/, {}, SETTLE)).toBeTruthy();
   }, TIMEOUT);
@@ -43,7 +42,6 @@ describe('App shell', () => {
     renderApp();
     await screen.findByText('Bulbasaur', {}, SETTLE);
 
-    // Untouched, because the migration is gated on its own marker.
     expect(await AsyncStorage.getItem('pokedex-query-cache')).toBe('{"legacy":true}');
   }, TIMEOUT);
 
@@ -53,7 +51,6 @@ describe('App shell', () => {
     renderApp();
 
     expect(await screen.findByText('Bulbasaur', {}, SETTLE)).toBeTruthy();
-    // The dark background token reaches the splash overlay and the screens alike.
     expect(splash()?.props.style).toEqual(
       expect.objectContaining({ backgroundColor: '#0E1118' }),
     );

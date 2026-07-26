@@ -34,7 +34,6 @@ describe('formatName', () => {
   });
 
   it('leaves empty segments alone rather than crashing on them', () => {
-    // PokeAPI form names occasionally double up their separators.
     expect(formatName('ho--oh')).toBe('Ho  Oh');
     expect(formatName('-porygon')).toBe(' Porygon');
   });
@@ -47,14 +46,11 @@ describe('height formatting (decimetres in)', () => {
   });
 
   it("formats feet'inches\" like the games do", () => {
-    // Bulbasaur: 7 dm → 2'04"
     expect(formatHeightFeetInches(7)).toBe('2\'04"');
-    // Charizard: 17 dm → 5'07"
     expect(formatHeightFeetInches(17)).toBe('5\'07"');
   });
 
   it('carries a rounded 12 inches into the next foot', () => {
-    // 9 dm = 35.43 in = 2 ft 11.43 in → 2'11"; 61 dm = 240.16 in → 20'00"
     expect(formatHeightFeetInches(9)).toBe('2\'11"');
     expect(formatHeightFeetInches(61)).toBe('20\'00"');
   });

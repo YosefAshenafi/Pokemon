@@ -15,7 +15,6 @@ async function renderPulse() {
       <Text>Loading</Text>
     </Pulse>,
   );
-  // The reduce-motion preference is read asynchronously; let it settle.
   await act(async () => {});
   return screen.getByTestId('pulse');
 }
@@ -33,8 +32,6 @@ describe('Pulse', () => {
 
     const pulse = await renderPulse();
 
-    // The driving Animated.Value is attached whether or not the loop is running;
-    // what matters is that the component mounts and stays visible either way.
     expect(pulse).toBeTruthy();
     expect(screen.getByText('Loading')).toBeTruthy();
   });
@@ -44,8 +41,6 @@ describe('Pulse', () => {
 
     const pulse = await renderPulse();
 
-    // Full opacity, not mid-pulse: the skeleton's shape already says "loading",
-    // so there is nothing to replace the movement with.
     expect(pulse.props.style).toEqual(expect.objectContaining({ opacity: 1 }));
   });
 });
