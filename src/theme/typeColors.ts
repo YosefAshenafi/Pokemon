@@ -29,28 +29,14 @@ export function typeColor(type: string): string {
   return TYPE_COLORS[type.toLowerCase() as PokemonType] ?? FALLBACK_COLOR;
 }
 
-// Memoised because every chip asks the same question of the same 18 colours,
-// and a grid can hold dozens of chips that re-render on every scroll batch.
-const foregroundCache = new Map<string, string>();
-
-/**
- * Picks a readable text color for a given background so light chips
- * (electric, ice, ground, etc.) don't end up with unreadable white text.
- */
-export function textColorOn(background: string): string {
-  const cached = foregroundCache.get(background);
-  if (cached) return cached;
-
+function readableOn(background: string): string {
   const hex = background.replace('#', '');
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);
   // Perceived luminance (ITU-R BT.709)
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  const foreground = luminance > 0.6 ? '#1B2137' : '#FFFFFF';
-
-  foregroundCache.set(background, foreground);
-  return foreground;
+  return luminance > 0.6 ? '#1B2137' : '#FFFFFF';
 }
 
 /**
@@ -73,4 +59,24 @@ const STAT_COLORS: Record<string, string> = {
 /** Colour for a base-stat bar, e.g. `special-attack` → blue. */
 export function statColor(stat: string): string {
   return STAT_COLORS[stat.toLowerCase()] ?? FALLBACK_COLOR;
+}
+
+/**
+ * Every background this app actually paints text on, resolved once at module
+ * load. A grid can hold dozens of chips re-rendering on each scroll batch, and
+ * they only ever ask about these colours - so the answers are computed up front
+ * rather than accumulated in a cache that nothing bounds.
+ */
+const FOREGROUNDS: Record<string, string> = Object.fromEntries(
+  [...Object.values(TYPE_COLORS), ...Object.values(STAT_COLORS), FALLBACK_COLOR].map(
+    (background) => [background, readableOn(background)],
+  ),
+);
+
+/**
+ * Picks a readable text color for a given background so light chips
+ * (electric, ice, ground, etc.) don't end up with unreadable white text.
+ */
+export function textColorOn(background: string): string {
+  return FOREGROUNDS[background] ?? readableOn(background);
 }

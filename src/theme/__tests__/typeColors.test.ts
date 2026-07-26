@@ -33,6 +33,13 @@ describe('textColorOn', () => {
   it('uses white text on dark backgrounds (fighting red)', () => {
     expect(textColorOn('#C22E28')).toBe('#FFFFFF');
   });
+
+  it('still answers for a background it has not seen before', () => {
+    // The answers for the app's own palette are precomputed; anything else has
+    // to fall through to the same calculation rather than to a default.
+    expect(textColorOn('#FFFFFF')).toBe('#1B2137');
+    expect(textColorOn('#000000')).toBe('#FFFFFF');
+  });
 });
 
 describe('statColor', () => {
