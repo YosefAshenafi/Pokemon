@@ -54,8 +54,14 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {/*
+        The user gets wording they can act on; the exception text goes to the
+        report above. Putting `error.message` on screen reads as unfinished and
+        leaks internals - a zod failure or "undefined is not a function" tells
+        a user nothing and tells anyone else slightly too much.
+      */}
       <ErrorState
-        message={`This screen could not be shown. ${error.message}`}
+        message="This screen could not be shown. Please try again."
         onRetry={() => {
           retry();
         }}

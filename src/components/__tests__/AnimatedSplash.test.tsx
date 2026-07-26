@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { resetSystemColorScheme, setSystemColorScheme } from '@/test/appearance';
 import { setReducedMotion } from '@/test/motion';
 
-import { AnimatedSplash } from '../AnimatedSplash';
+import { AnimatedSplash, SPLASH_TIMING } from '../AnimatedSplash';
 
 // expo-splash-screen drives the native launch screen, which does not exist under
 // Jest. Its exports are non-configurable, so they cannot be spied on in place.
@@ -13,8 +13,8 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn().mockResolvedValue(true),
 }));
 
-/** Long enough to clear the 1400 ms hold plus the 350 ms fade. */
-const PAST_THE_FADE = 3000;
+/** Comfortably past the hold plus the fade, whatever those are tuned to. */
+const PAST_THE_FADE = SPLASH_TIMING.hold + SPLASH_TIMING.fade + 1000;
 
 beforeEach(() => {
   jest.useFakeTimers();
@@ -75,10 +75,10 @@ describe('AnimatedSplash', () => {
     const onFinish = jest.fn();
     const { unmount } = render(<AnimatedSplash onFinish={onFinish} />);
 
-    // Exactly on the 1400 ms hold: the fade has been started but has not yet
-    // run a frame, so unmounting here interrupts it mid-animation.
+    // Exactly on the hold: the fade has been started but has not yet run a
+    // frame, so unmounting here interrupts it mid-animation.
     act(() => {
-      jest.advanceTimersByTime(1400);
+      jest.advanceTimersByTime(SPLASH_TIMING.hold);
     });
     expect(onFinish).not.toHaveBeenCalled();
 

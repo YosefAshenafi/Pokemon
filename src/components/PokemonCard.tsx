@@ -56,17 +56,24 @@ export const PokemonCard = memo(function PokemonCard({
         className="flex-row items-center justify-between gap-1"
         style={{ height: titleHeight }}
       >
+        {/*
+          `lineHeight` is set, not inherited from the font: it is the same
+          number the row height is computed from, so the text cannot render
+          taller than the space reserved for it on a device whose default font
+          differs from the one this was designed against.
+        */}
         <Text
           className="flex-1 text-[13px] font-semibold text-ink"
           numberOfLines={1}
           maxFontSizeMultiplier={CARD_MAX_FONT_SCALE}
+          style={{ lineHeight: titleHeight }}
         >
           {formatName(name)}
         </Text>
         <Text
           className="text-[11px] text-ink-subtle"
           maxFontSizeMultiplier={CARD_MAX_FONT_SCALE}
-          style={{ fontVariant: ['tabular-nums'] }}
+          style={{ lineHeight: titleHeight, fontVariant: ['tabular-nums'] }}
         >
           {formatPokemonId(id)}
         </Text>

@@ -8,8 +8,17 @@ import { darkColors, lightColors } from '@/theme/paperTheme';
 
 const LOGO_SIZE = 140;
 const SPIN_MS = 1100; // one full rotation
-const MIN_VISIBLE_MS = 1400;
+// Exactly one rotation. The previous 1400 held every cold start an extra
+// 300ms past the animation finishing, for no reason anyone could name.
+const MIN_VISIBLE_MS = SPIN_MS;
 const FADE_MS = 350;
+
+/**
+ * The handoff schedule, exported so a test can drive it without hardcoding the
+ * numbers - which is how a timing change turns into a puzzling test failure
+ * rather than an obvious one.
+ */
+export const SPLASH_TIMING = { spin: SPIN_MS, hold: MIN_VISIBLE_MS, fade: FADE_MS } as const;
 
 interface AnimatedSplashProps {
   onFinish: () => void;

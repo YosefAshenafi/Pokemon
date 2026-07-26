@@ -38,7 +38,12 @@ export const CARD_MAX_FONT_SCALE = 1.3;
 export const CARD_METRICS = {
   border: 1,
   padding: 12,
-  /** One line of the 13px name at default scale. */
+  /**
+   * The title row. The card sets this as an explicit `lineHeight` on the text
+   * rather than letting the font decide, so the number is a rule the card
+   * enforces instead of a guess about how tall 13px renders - which varies by
+   * platform and by the font the device happens to substitute.
+   */
   title: 20,
   gap: 8,
   artwork: 96,

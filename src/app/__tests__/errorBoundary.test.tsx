@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
+import { setErrorReporter } from '@/api/reportError';
 import { resetSystemColorScheme, setSystemColorScheme } from '@/test/appearance';
 
 import { ErrorBoundary } from '../_layout';
@@ -20,8 +21,20 @@ describe('ErrorBoundary', () => {
 
     expect(screen.getByText('Something went wrong')).toBeTruthy();
     expect(screen.getByText(/This screen could not be shown/)).toBeTruthy();
-    // The underlying message is kept, so a tester can report what actually broke.
-    expect(screen.getByText(/stats is undefined/)).toBeTruthy();
+  });
+
+  it('keeps the exception text off the screen and in the report instead', () => {
+    const reporter = jest.fn();
+    setErrorReporter(reporter);
+    const error = new Error('stats is undefined');
+
+    render(<ErrorBoundary error={error} retry={jest.fn()} />);
+
+    // "undefined is not a function" tells a user nothing and anyone else a
+    // little too much; the detail belongs where an engineer will read it.
+    expect(screen.queryByText(/stats is undefined/)).toBeNull();
+    expect(reporter).toHaveBeenCalledWith(error, expect.objectContaining({ boundary: 'root' }));
+    setErrorReporter(null);
   });
 
   it('re-renders the route when the retry is pressed', () => {
