@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { CARD_MAX_FONT_SCALE, CARD_METRICS } from '@/constants/ui';
@@ -28,19 +28,28 @@ export const PokemonCard = memo(function PokemonCard({
   const scale = Math.min(fontScale, CARD_MAX_FONT_SCALE);
   const titleHeight = Math.round(CARD_METRICS.title * scale);
   const chipsHeight = Math.round(CARD_METRICS.chips * scale);
+  const [pressed, setPressed] = useState(false);
 
   return (
     <Pressable
       onPress={() => onPress(name)}
-      onPressIn={() => onPressIn?.(name)}
+      onPressIn={() => {
+        setPressed(true);
+        onPressIn?.(name);
+      }}
+      onPressOut={() => setPressed(false)}
       accessibilityRole="button"
       accessibilityLabel={`${formatName(name)}, ${formatPokemonId(id)}`}
       accessibilityHint="Opens details"
       className="w-[48%] rounded-2xl border border-line bg-surface"
-      style={({ pressed }) => [
-        { padding: CARD_METRICS.padding, marginBottom: CARD_METRICS.rowGap },
-        pressed ? { opacity: 0.85, transform: [{ scale: 0.98 }] } : null,
-      ]}
+      // A plain object, never a function: NativeWind rewrites `style` to inject
+      // the className rules, and a function nested in that array is dropped.
+      style={{
+        padding: CARD_METRICS.padding,
+        marginBottom: CARD_METRICS.rowGap,
+        opacity: pressed ? 0.85 : 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      }}
     >
       <View
         className="flex-row items-center justify-between gap-1"

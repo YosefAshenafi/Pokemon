@@ -46,7 +46,9 @@ describe('PokemonCard', () => {
     render(<PokemonCard id={1} name="bulbasaur" types={['grass']} onPress={jest.fn()} fontScale={1} />);
     const card = screen.getByRole('button');
 
-    expect(StyleSheet.flatten(card.props.style)?.opacity).toBeUndefined();
+    const atRest = StyleSheet.flatten(card.props.style);
+    expect(atRest.opacity).toBe(1);
+    expect(atRest.transform).toEqual([{ scale: 1 }]);
 
     holdDown(card);
 

@@ -20,6 +20,26 @@ import {
   formatWeightLbs,
 } from '@/utils/format';
 
+function MoveChip({ name, onPress }: { name: string; onPress: () => void }) {
+  const [pressed, setPressed] = useState(false);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      accessibilityRole="button"
+      accessibilityLabel={`${formatName(name)} move`}
+      accessibilityHint="Opens move details"
+      className="flex-row items-center rounded-full bg-accent-soft py-1 pl-3 pr-1.5"
+      style={{ opacity: pressed ? 0.6 : 1 }}
+    >
+      <Text className="text-xs font-semibold text-accent">{formatName(name)}</Text>
+      <MaterialCommunityIcons name="chevron-right" size={14} className="text-accent" />
+    </Pressable>
+  );
+}
+
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
@@ -111,26 +131,13 @@ export default function DetailScreen() {
           <SectionCard title={`Moves (${moves.length})`}>
             <View className="flex-row flex-wrap gap-1.5">
               {visibleMoves.map(({ move }) => (
-                <Pressable
+                <MoveChip
                   key={move.name}
+                  name={move.name}
                   onPress={() =>
                     router.push({ pathname: '/move/[name]', params: { name: move.name } })
                   }
-                  accessibilityRole="button"
-                  accessibilityLabel={`${formatName(move.name)} move`}
-                  accessibilityHint="Opens move details"
-                  className="flex-row items-center rounded-full bg-accent-soft py-1 pl-3 pr-1.5"
-                  style={({ pressed }) => (pressed ? { opacity: 0.6 } : undefined)}
-                >
-                  <Text className="text-xs font-semibold text-accent">
-                    {formatName(move.name)}
-                  </Text>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={14}
-                    className="text-accent"
-                  />
-                </Pressable>
+                />
               ))}
             </View>
             {moves.length > MOVES_PREVIEW_COUNT ? (

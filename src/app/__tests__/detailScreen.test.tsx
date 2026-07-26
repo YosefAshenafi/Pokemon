@@ -135,7 +135,7 @@ describe('Detail screen', () => {
     await screen.findByText('Base Stats', {}, SETTLE);
 
     const pill = screen.getByLabelText('Tackle move');
-    expect(StyleSheet.flatten(pill.props.style)?.opacity).toBeUndefined();
+    expect(StyleSheet.flatten(pill.props.style).opacity).toBe(1);
 
     holdDown(pill);
 
