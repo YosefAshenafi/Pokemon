@@ -23,7 +23,7 @@ A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. B
 - **Artwork fallbacks**: forms without official art (mega/gmax) fall back to their sprite, then to a drawn pokéball
 - **Loading, error and empty states** on every screen, each with a working **Try again**, plus a route-level error boundary so an unexpected response cannot leave a blank screen
 - **Navigation**: file-based stack via Expo Router (list → detail → move)
-- **Accessibility**: labelled controls with hints and selection state throughout; text tokens are held to WCAG AA contrast by a test
+- **Accessibility**: labelled controls with hints and selection state, headings for rotor navigation, text that scales with the system size, and animation that stops when the system asks for reduced motion. Contrast is held to WCAG AA by a test.
 
 ## Tech stack
 
@@ -34,6 +34,7 @@ A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. B
 | React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme |
 | NativeWind (v4)        | All layout/spacing/typography styling via Tailwind classes                  |
 | TanStack React Query   | Server state: caching, infinite scroll pagination, prefetching, retries     |
+| Zod                    | Parses every PokeAPI response at the boundary; the TS types are inferred from the schemas |
 | AsyncStorage persister | Persists the small, bounded queries across launches for offline use         |
 | expo-image             | Cached, fading artwork images                                               |
 
@@ -118,5 +119,6 @@ src/
 - **One request per refresh.** Pull-to-refresh collapses the infinite query to its first page before refetching; `refetch()` alone would re-request every page loaded so far.
 - **Cheap re-renders.** `PokemonCard` is `React.memo` and purely presentational, so fast scrolling re-runs no data logic. The type-filter intersection uses a module-scope `combine`, letting React Query structurally share the result array across renders.
 - **Progressive loading.** The type index publishes each batch of six as it lands, and skeleton cards match the real card geometry, so nothing shifts when data arrives.
+- **No row measurement.** Card geometry is data (`CARD_METRICS`), so the grid can give `FlatList` an exact `getItemLayout` instead of measuring every row — the usual cause of blank cells during a fast Android fling. The height scales with the system font size, so capping text growth and pinning row height stay consistent.
 - **Cached images.** `expo-image` handles on-disk caching and a 200 ms fade-in; the fallback chain (official art → sprite → drawn pokéball) means a 404 on a mega form never leaves a broken image or a retry storm.
 - **React Compiler on** via `experiments.reactCompiler` in `app.json`, so components are auto-memoized at build time.
