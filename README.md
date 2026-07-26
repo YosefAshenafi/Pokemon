@@ -131,6 +131,17 @@ src/
   test/                # Test harness: the fake PokeAPI, app renderer, appearance & press helpers, CSS stub
 ```
 
+## Releases
+
+Build profiles live in [eas.json](eas.json): `development`, `preview` and `production`.
+
+**`app.json` owns the version, EAS owns the build number.** `version` (1.0.0) is the
+user-facing string and is set here, because `runtimeVersion` is tied to it — an over-the-air
+update can only reach a binary built from the same native runtime. The iOS build number and
+Android version code are *not* here: `appVersionSource: "remote"` puts them on EAS, which
+increments them per production build. Keeping a copy in `app.json` would mean two sources
+of truth and a version bump to commit after every release.
+
 ## Observability
 
 Failures are reported through one seam, `src/api/reportError.ts`, called from three
