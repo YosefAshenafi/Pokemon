@@ -2,6 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { DetailScaffold } from '@/components/DetailScaffold';
+import { SectionCard } from '@/components/SectionCard';
 import { TypeChip } from '@/components/TypeChip';
 import { useMove } from '@/hooks/useMove';
 import { formatEffectText, formatName } from '@/utils/format';
@@ -70,14 +71,11 @@ export default function MoveScreen() {
           </View>
 
           {effectEntry ? (
-            <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
-              <Text accessibilityRole="header" className="mb-2 text-sm font-bold text-ink">
-                Effect
-              </Text>
+            <SectionCard title="Effect">
               <Text className="text-sm leading-5 text-ink-muted">
                 {formatEffectText(effectEntry.short_effect, data.effect_chance)}
               </Text>
-            </View>
+            </SectionCard>
           ) : null}
         </>
       ) : null}

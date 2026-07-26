@@ -6,6 +6,7 @@ import { Button } from 'react-native-paper';
 
 import { Artwork } from '@/components/Artwork';
 import { DetailScaffold } from '@/components/DetailScaffold';
+import { SectionCard } from '@/components/SectionCard';
 import { StatBar } from '@/components/StatBar';
 import { TypeChip } from '@/components/TypeChip';
 import { MOVES_PREVIEW_COUNT } from '@/constants/ui';
@@ -37,17 +38,6 @@ function MoveChip({ name, onPress }: { name: string; onPress: () => void }) {
       <Text className="text-xs font-semibold text-accent">{formatName(name)}</Text>
       <MaterialCommunityIcons name="chevron-right" size={14} className="text-accent" />
     </Pressable>
-  );
-}
-
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <View className="mt-4 rounded-2xl border border-line bg-surface p-4">
-      <Text accessibilityRole="header" className="mb-2 text-sm font-bold text-ink">
-        {title}
-      </Text>
-      {children}
-    </View>
   );
 }
 
