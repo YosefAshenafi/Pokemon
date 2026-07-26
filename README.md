@@ -135,12 +135,15 @@ src/
 
 Build profiles live in [eas.json](eas.json): `development`, `preview` and `production`.
 
-**`app.json` owns the version, EAS owns the build number.** `version` (1.0.0) is the
-user-facing string and is set here, because `runtimeVersion` is tied to it — an over-the-air
-update can only reach a binary built from the same native runtime. The iOS build number and
-Android version code are *not* here: `appVersionSource: "remote"` puts them on EAS, which
-increments them per production build. Keeping a copy in `app.json` would mean two sources
-of truth and a version bump to commit after every release.
+**`app.json` owns both the version and the build number.** `version` (1.0.0) is the
+user-facing string, and `runtimeVersion` is tied to it — an over-the-air update can only
+reach a binary built from the same native runtime. `ios.buildNumber` and
+`android.versionCode` sit beside it and are bumped by hand per release, with
+`appVersionSource: "local"` telling EAS to read them from here. Everything a build needs
+is in the repo, so cloning it is enough — no EAS project or account is required to build.
+Once releases run through CI rather than by hand, the build number should move to EAS
+(`appVersionSource: "remote"` + `autoIncrement`), which is the version of this decision
+that removes the human from the loop.
 
 ## Observability
 

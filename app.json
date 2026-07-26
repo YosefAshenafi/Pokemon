@@ -12,7 +12,8 @@
     },
     "ios": {
       "bundleIdentifier": "com.jossyfreelancer.pokedex",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.jossyfreelancer.pokedex",
@@ -20,7 +21,8 @@
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "versionCode": 1
     },
     "web": {
       "output": "static",
