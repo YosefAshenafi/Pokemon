@@ -6,35 +6,35 @@ A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. B
 
 ## Screenshots
 
-|                                                List & search                                                |                                                         Detail                                                          |
-| :---------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------: |
+|                                                                           List & search                                                                           |                                                                                   Detail                                                                                    |
+| :---------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | <img width="340" alt="List screen with search bar and Pokémon card grid" src="https://github.com/user-attachments/assets/d21b4e16-810b-4c90-bebf-f73aa4708443" /> | <img width="340" alt="Bulbasaur detail screen with stats, breeding info and moves" src="https://github.com/user-attachments/assets/410874d1-d7fc-416e-a69a-9f1ab34bdb1e" /> |
 
 ## Features
 
 - **List**: 2-column grid (artwork, name, Pokédex number, type chips) with infinite scroll and pull-to-refresh
-- **Search & filter**: client-side search by name (prefixes rank first) or Pokédex number, plus a type filter returning the Pokémon that have *all* the selected types. The two compose, and the filter stops at two types because no Pokémon has a third.
+- **Search & filter**: client-side search by name (prefixes rank first) or Pokédex number, plus a type filter returning the Pokémon that have _all_ the selected types. The two compose, and the filter stops at two types because no Pokémon has a third.
 - **Detail**: base stats with a colour per stat, height and weight in imperial and metric, full move list behind a "See all" toggle
 - **Move details**: type, damage class, power, accuracy, Power Points (PP) and effect text
 - **Offline**: list, name index and type data persist to device storage, so the app opens populated and stays browsable
 - **Dark mode**: follows system appearance through semantic tokens; one component tree serves both schemes
-- **Artwork fallbacks**: forms without official art (mega/gmax) fall back to their sprite, then to a drawn pokéball
+- **Artwork fallbacks**: grid cards load card-sized thumbnails of the official art; forms without official art (mega/gmax) fall back to their sprite, then to a drawn pokéball
 - **Loading, error and empty states** on every screen, each with a working **Try again**, plus a route-level error boundary so an unexpected response cannot leave a blank screen
 - **Navigation**: file-based stack via Expo Router (list → detail → move)
 - **Accessibility**: labelled controls with hints and selection state, headings for rotor navigation, text that scales with the system size, and animation that stops when the system asks for reduced motion. Contrast is held to WCAG AA by a test.
 
 ## Tech stack
 
-| Requirement            | How it's used                                                               |
-| ---------------------- | --------------------------------------------------------------------------- |
-| Expo (SDK 54)          | App platform + Expo Router for navigation                                   |
-| TypeScript             | Strict mode throughout                                                      |
-| React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme |
-| NativeWind (v4)        | All layout/spacing/typography styling via Tailwind classes                  |
-| TanStack React Query   | Server state: caching, infinite scroll pagination, prefetching, retries     |
+| Requirement            | How it's used                                                                             |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| Expo (SDK 54)          | App platform + Expo Router for navigation                                                 |
+| TypeScript             | Strict mode throughout                                                                    |
+| React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme               |
+| NativeWind (v4)        | All layout/spacing/typography styling via Tailwind classes                                |
+| TanStack React Query   | Server state: caching, infinite scroll pagination, prefetching, retries                   |
 | Zod                    | Parses every PokeAPI response at the boundary; the TS types are inferred from the schemas |
-| AsyncStorage persister | Persists the small, bounded queries across launches for offline use         |
-| expo-image             | Cached, fading artwork images                                               |
+| AsyncStorage persister | Persists the small, bounded queries across launches for offline use                       |
+| expo-image             | Cached, fading artwork images                                                             |
 
 ## Getting started
 
@@ -78,14 +78,12 @@ All three commands run on every push and pull request via [GitHub Actions](.gith
 
 ### Measured
 
-| What | Value |
-| ---- | ----- |
-| Android JS bundle (Hermes bytecode) | 5.00 MB (measured in CI), against a 6 MB ceiling |
-| Zod parse of the 1302-entry name index | 0.25 ms |
-| Grid at ~7 pages deep, iPhone 15 Pro simulator | No blank cells, no row drift (Maestro fling test) |
-
-The remaining Performance claims below are reasoned, not measured — the prefetch
-window has not been profiled, and no Android device has run the app yet.
+| What                                           | Value                                                           |
+| ---------------------------------------------- | --------------------------------------------------------------- |
+| Android JS bundle (Hermes bytecode)            | 5.00 MB (measured in CI), against a 6 MB ceiling                |
+| Zod parse of the 1302-entry name index         | 0.25 ms                                                         |
+| Grid at ~7 pages deep, iPhone 15 Pro simulator | No blank cells, no row drift (Maestro fling test)               |
+| Grid artwork, per card                         | ~15 KB resized WebP via wsrv.nl, down from the ~140 KB original |
 
 ### End-to-end
 
@@ -95,12 +93,11 @@ maestro test .maestro/smoke-expo-go.yaml  # Expo Go workflow; needs `npx expo st
 ```
 
 One flow — launch, search, open a detail, go back — covering the one thing the Jest
-suite cannot: that the app runs on a device. The **Expo Go variant passes** on an
-iPhone 15 Pro simulator (iOS 17.5); the same session fling-tested the grid seven pages
-deep with no blank cells or row drift, which is the `getItemLayout` contract holding on
-a real screen. The standalone variant is the same flow against a native build and has
-not been run — this machine's toolchain cannot produce one. Neither is in CI, which has
-no device attached.
+suite cannot: that the app runs on a device. **Both variants pass** on an iPhone 15 Pro
+simulator (iOS 17.5): the standalone flow against a Release build from `npx expo run:ios`,
+and the Expo Go flow against Metro. An earlier session also fling-tested the grid seven
+pages deep with no blank cells or row drift, which is the `getItemLayout` contract
+holding on a real screen. Neither flow is in CI, which has no device attached.
 
 ### No mocking of application code
 
@@ -158,8 +155,10 @@ awkward to retrofit and they are in place, so adopting a vendor is one line in
 `src/app/_layout.tsx`:
 
 ```ts
-import * as Sentry from '@sentry/react-native';
-setErrorReporter((error, context) => Sentry.captureException(error, { extra: context }));
+import * as Sentry from "@sentry/react-native";
+setErrorReporter((error, context) =>
+  Sentry.captureException(error, { extra: context }),
+);
 ```
 
 Reporting is filtered by `ApiError.kind`. A dropped connection or a timeout is not a
@@ -177,5 +176,5 @@ a response that will not parse, or one that no longer matches its schema.
 - **Cheap re-renders.** `PokemonCard` is `React.memo` and purely presentational, so fast scrolling re-runs no data logic. The type-filter intersection uses a module-scope `combine`, letting React Query structurally share the result array across renders.
 - **Progressive loading.** The type index publishes each batch of six as it lands, and skeleton cards match the real card geometry, so nothing shifts when data arrives.
 - **No row measurement.** Card geometry is data (`CARD_METRICS`), so the grid can give `FlatList` an exact `getItemLayout` instead of measuring every row — the usual cause of blank cells during a fast Android fling. The height scales with the system font size, so capping text growth and pinning row height stay consistent. `removeClippedSubviews` is deliberately left off until that can be watched on hardware: it decides what to detach from the layout `getItemLayout` asserts, and pairing the two unverified trades a visible bug against an unmeasured gain.
-- **Cached images.** `expo-image` handles on-disk caching and a 200 ms fade-in; the fallback chain (official art → sprite → drawn pokéball) means a 404 on a mega form never leaves a broken image or a retry storm.
+- **Right-sized images.** Grid cards ask wsrv.nl for the official art resized to the card's pixel size — ~15 KB of WebP instead of the ~140 KB original, so a first screen of cards costs ~360 KB rather than ~3.5 MB. The detail screen keeps the full-resolution file. `expo-image` handles on-disk caching and a 200 ms fade-in, and the fallback chain (thumbnail → official art → sprite → drawn pokéball) means a resizer outage or a 404 on a mega form never leaves a broken image.
 - **React Compiler on** via `experiments.reactCompiler` in `app.json`, so components are auto-memoized at build time.
