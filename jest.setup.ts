@@ -48,11 +48,27 @@ jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
   originalError(...args);
 });
 
+// Connectivity is a native radio. This stub keeps NetInfo's contract - the
+// listener is called immediately with the current state and unsubscribes by
+// return value - and is driven from `src/test/network.ts`.
+jest.mock('@react-native-community/netinfo', () => ({
+  __esModule: true,
+  default: {
+    addEventListener: (listener: (state: unknown) => void) => {
+      const { netInfoListeners, netInfoState } = require('./src/test/network');
+      netInfoListeners().add(listener);
+      listener(netInfoState());
+      return () => netInfoListeners().delete(listener);
+    },
+  },
+}));
+
 // Reduce-motion is a native accessibility setting with no implementation under
 // Jest, where the real read resolves `undefined` after the render has settled.
 // Defaulting it per test keeps that asynchronous answer from landing as an
 // un-acted update; `src/test/motion.ts` overrides it where a test needs it on.
 beforeEach(() => {
+  require('./src/test/network').resetNetwork();
   jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(false);
   jest
     .spyOn(AccessibilityInfo, 'addEventListener')

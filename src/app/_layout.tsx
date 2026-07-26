@@ -18,6 +18,7 @@ import { purgeLegacyCacheKeys, queryClient } from '@/api/queryClient';
 import { reportError } from '@/api/reportError';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
 import { ErrorState } from '@/components/ErrorState';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { CACHE_MIGRATION_KEY } from '@/constants/cache';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -103,12 +104,17 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={isDark ? paperDarkTheme : paperLightTheme} settings={paperSettings}>
         <StatusBar style={splashVisible && !isDark ? 'dark' : 'light'} />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-          }}
-        />
+        <View style={{ flex: 1 }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+            }}
+          />
+          {/* In the flow below the stack, so it shortens the screen rather than
+              covering the last row of whatever is on it. */}
+          <OfflineBanner />
+        </View>
         {splashVisible ? <AnimatedSplash onFinish={() => setSplashVisible(false)} /> : null}
       </PaperProvider>
     </QueryClientProvider>
