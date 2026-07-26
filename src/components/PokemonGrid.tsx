@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { FlatList, Platform, Text, useWindowDimensions } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 
@@ -44,6 +44,14 @@ interface PokemonGridProps {
   refreshing: boolean;
   /** Rendered when `data` is empty; `null` while simply browsing. */
   empty: ReactElement | null;
+  /**
+   * Identity of the request behind the rows - the search term and the active
+   * types, not the rows themselves. When it changes the grid returns to the
+   * top: new results replacing a deeply-scrolled list would otherwise keep the
+   * old offset and open on their middle, with the best match stranded far
+   * above. Pagination appends under the same key, so loading more never jumps.
+   */
+  requestKey: string;
 }
 
 /**
@@ -63,11 +71,19 @@ export function PokemonGrid({
   onRefresh,
   refreshing,
   empty,
+  requestKey,
 }: PokemonGridProps) {
   // Rows grow with the system font size, so the height promised below has to be
   // measured at the current scale rather than assumed at 1x.
   const { fontScale } = useWindowDimensions();
   const rowHeight = gridRowHeight(fontScale);
+
+  const listRef = useRef<FlatList<PokemonSummary>>(null);
+  useEffect(() => {
+    // Not animated: the rows on screen already belong to the new request, so
+    // there is nothing meaningful to scroll the user past.
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [requestKey]);
 
   const renderItem = useCallback(
     ({ item }: { item: PokemonSummary }) => (
@@ -106,6 +122,7 @@ export function PokemonGrid({
 
   return (
     <FlatList
+      ref={listRef}
       testID="pokemon-grid"
       data={data}
       renderItem={renderItem}

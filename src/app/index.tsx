@@ -49,6 +49,7 @@ export default function ListScreen() {
           truncated={dex.isTruncated}
           refreshing={dex.refreshing}
           onRefresh={dex.isPaginated ? dex.refresh : undefined}
+          requestKey={`${dex.searchTerm}\u0000${dex.activeTypes.join(',')}`}
           empty={
             dex.isPaginated ? null : (
               <EmptyState

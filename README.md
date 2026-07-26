@@ -1,7 +1,5 @@
 # Pokemon
 
-[![CI](https://github.com/YosefAshenafi/Pokemon/actions/workflows/ci.yml/badge.svg)](https://github.com/YosefAshenafi/Pokemon/actions/workflows/ci.yml)
-
 A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. Browse the Pokédex, search by name or number, filter by type, and open any Pokémon for its stats, breeding info and moves, all live from [PokeAPI](https://pokeapi.co).
 
 **Project type:** mobile app (Expo / React Native), runs on iOS, Android or Expo Go. No backend, no authentication.
@@ -84,20 +82,25 @@ All three commands run on every push and pull request via [GitHub Actions](.gith
 | ---- | ----- |
 | Android JS bundle (Hermes bytecode) | 5.00 MB (measured in CI), against a 6 MB ceiling |
 | Zod parse of the 1302-entry name index | 0.25 ms |
+| Grid at ~7 pages deep, iPhone 15 Pro simulator | No blank cells, no row drift (Maestro fling test) |
 
-Everything else in the Performance section below is reasoned, not measured — the list
-tuning and the prefetch window have not been profiled on a device.
+The remaining Performance claims below are reasoned, not measured — the prefetch
+window has not been profiled, and no Android device has run the app yet.
 
 ### End-to-end
 
 ```bash
-maestro test .maestro/smoke.yaml     # needs a device or simulator with the app installed
+maestro test .maestro/smoke.yaml          # standalone build (expo run:ios / run:android)
+maestro test .maestro/smoke-expo-go.yaml  # Expo Go workflow; needs `npx expo start` running
 ```
 
-One flow — cold start, search, open a detail, go back — covering the one thing 211
-Jest tests cannot: that the built app launches on a device. It is **not** in CI, which
-has no device attached, and **has not been run yet**: the native build needs a machine
-with a current Xcode or Android SDK, which is the one gap left in this project.
+One flow — launch, search, open a detail, go back — covering the one thing the Jest
+suite cannot: that the app runs on a device. The **Expo Go variant passes** on an
+iPhone 15 Pro simulator (iOS 17.5); the same session fling-tested the grid seven pages
+deep with no blank cells or row drift, which is the `getItemLayout` contract holding on
+a real screen. The standalone variant is the same flow against a native build and has
+not been run — this machine's toolchain cannot produce one. Neither is in CI, which has
+no device attached.
 
 ### No mocking of application code
 

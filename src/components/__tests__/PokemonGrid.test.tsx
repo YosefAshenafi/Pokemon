@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
-import { Dimensions } from 'react-native';
+import { Dimensions, FlatList } from 'react-native';
 
 import type { PokemonSummary } from '@/api/types';
 import { SEARCH_RESULT_LIMIT } from '@/constants/api';
@@ -25,6 +25,7 @@ function renderGrid(overrides: Partial<React.ComponentProps<typeof PokemonGrid>>
       truncated={false}
       refreshing={false}
       empty={null}
+      requestKey=""
       {...overrides}
     />,
   );
@@ -57,6 +58,66 @@ describe('PokemonGrid', () => {
 
     expect(screen.getByLabelText('Loading more Pokémon')).toBeTruthy();
     expect(screen.queryByText(/matches/)).toBeNull();
+  });
+
+  describe('scroll position across request changes', () => {
+    // Found on a device, not in review: searching while scrolled seven pages
+    // deep kept the old offset, opening the results on their middle with the
+    // best match stranded far above.
+    it('returns to the top when the request behind the rows changes', () => {
+      const scrollToOffset = jest
+        .spyOn(FlatList.prototype, 'scrollToOffset')
+        .mockImplementation(() => {});
+      const { rerender } = renderGrid();
+      scrollToOffset.mockClear();
+
+      rerender(
+        <PokemonGrid
+          data={[{ id: 25, name: 'pikachu' }]}
+          typesByName={{}}
+          typesPending={false}
+          onSelect={jest.fn()}
+          onPrefetch={jest.fn()}
+          onEndReached={jest.fn()}
+          loadingMore={false}
+          truncated={false}
+          refreshing={false}
+          empty={null}
+          requestKey="pika"
+        />,
+      );
+
+      expect(scrollToOffset).toHaveBeenCalledWith({ offset: 0, animated: false });
+      scrollToOffset.mockRestore();
+    });
+
+    it('holds its place while pagination appends under the same request', () => {
+      const scrollToOffset = jest
+        .spyOn(FlatList.prototype, 'scrollToOffset')
+        .mockImplementation(() => {});
+      const { rerender } = renderGrid();
+      scrollToOffset.mockClear();
+
+      // Two more rows, same request: the user is mid-scroll and must stay there.
+      rerender(
+        <PokemonGrid
+          data={[...ROWS, { id: 7, name: 'squirtle' }, { id: 8, name: 'wartortle' }]}
+          typesByName={{}}
+          typesPending={false}
+          onSelect={jest.fn()}
+          onPrefetch={jest.fn()}
+          onEndReached={jest.fn()}
+          loadingMore={false}
+          truncated={false}
+          refreshing={false}
+          empty={null}
+          requestKey=""
+        />,
+      );
+
+      expect(scrollToOffset).not.toHaveBeenCalled();
+      scrollToOffset.mockRestore();
+    });
   });
 
   /**
