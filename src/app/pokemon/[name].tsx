@@ -96,7 +96,7 @@ export default function DetailScreen() {
             id={data.id}
             pokemon={data}
             alt={formatName(data.name)}
-            className="mt-2 h-56 w-full"
+            style={{ marginTop: 8, height: 224, width: '100%' }}
             placeholderSize={120}
           />
 

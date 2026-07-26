@@ -1,7 +1,8 @@
 import { memo, useState } from 'react';
-import { PixelRatio, Pressable, Text, View } from 'react-native';
+import { PixelRatio, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import { CARD_MAX_FONT_SCALE, CARD_METRICS } from '@/constants/ui';
+import { darkColors, lightColors } from '@/theme/paperTheme';
 import { formatName, formatPokemonId } from '@/utils/format';
 
 import { Artwork } from './Artwork';
@@ -16,7 +17,14 @@ interface PokemonCardProps {
   fontScale: number;
 }
 
-/** Grid card for the list screen; dimensions come from CARD_METRICS. */
+/**
+ * Grid card for the list screen; dimensions come from CARD_METRICS.
+ *
+ * Styled with StyleSheet rather than Tailwind classes: cards render inside
+ * FlatList's speculative windowing, where NativeWind's render-time colour
+ * scheme subscription leaks and raises React's "update on a component that
+ * hasn't mounted yet" warning whenever the theme flips.
+ */
 export const PokemonCard = memo(function PokemonCard({
   id,
   name,
@@ -29,6 +37,7 @@ export const PokemonCard = memo(function PokemonCard({
   const titleHeight = Math.round(CARD_METRICS.title * scale);
   const chipsHeight = Math.round(CARD_METRICS.chips * scale);
   const [pressed, setPressed] = useState(false);
+  const colors = useColorScheme() === 'dark' ? darkColors : lightColors;
 
   return (
     <Pressable
@@ -41,30 +50,29 @@ export const PokemonCard = memo(function PokemonCard({
       accessibilityRole="button"
       accessibilityLabel={`${formatName(name)}, ${formatPokemonId(id)}`}
       accessibilityHint="Opens details"
-      className="w-[48%] rounded-2xl border border-line bg-surface"
-      style={{
-        padding: CARD_METRICS.padding,
-        marginBottom: CARD_METRICS.rowGap,
-        opacity: pressed ? 0.85 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      }}
+      style={[
+        styles.card,
+        {
+          borderColor: colors.line,
+          backgroundColor: colors.surface,
+          padding: CARD_METRICS.padding,
+          marginBottom: CARD_METRICS.rowGap,
+          opacity: pressed ? 0.85 : 1,
+          transform: [{ scale: pressed ? 0.98 : 1 }],
+        },
+      ]}
     >
-      <View
-        className="flex-row items-center justify-between gap-1"
-        style={{ height: titleHeight }}
-      >
+      <View style={[styles.titleRow, { height: titleHeight }]}>
         <Text
-          className="flex-1 text-[13px] font-semibold text-ink"
           numberOfLines={1}
           maxFontSizeMultiplier={CARD_MAX_FONT_SCALE}
-          style={{ lineHeight: titleHeight }}
+          style={[styles.name, { color: colors.ink, lineHeight: titleHeight }]}
         >
           {formatName(name)}
         </Text>
         <Text
-          className="text-[11px] text-ink-subtle"
           maxFontSizeMultiplier={CARD_MAX_FONT_SCALE}
-          style={{ lineHeight: titleHeight, fontVariant: ['tabular-nums'] }}
+          style={[styles.number, { color: colors.inkSubtle, lineHeight: titleHeight }]}
         >
           {formatPokemonId(id)}
         </Text>
@@ -73,27 +81,31 @@ export const PokemonCard = memo(function PokemonCard({
       <Artwork
         id={id}
         alt={formatName(name)}
-        className="w-full"
-        style={{ height: CARD_METRICS.artwork, marginTop: CARD_METRICS.gap }}
+        style={{ width: '100%', height: CARD_METRICS.artwork, marginTop: CARD_METRICS.gap }}
         placeholderSize={56}
         thumbWidth={PixelRatio.getPixelSizeForLayoutSize(CARD_METRICS.artwork)}
       />
 
-      <View
-        className="flex-row flex-wrap gap-1.5"
-        style={{ height: chipsHeight, marginTop: CARD_METRICS.gap }}
-      >
+      <View style={[styles.chips, { height: chipsHeight, marginTop: CARD_METRICS.gap }]}>
         {types
           ? types.map((type) => <TypeChip key={type} type={type} />)
           : [0, 1].map((i) => (
               <View
                 key={i}
                 testID="type-chip-placeholder"
-                className="w-14 rounded-full bg-track"
-                style={{ height: chipsHeight }}
+                style={[styles.chipPlaceholder, { height: chipsHeight, backgroundColor: colors.track }]}
               />
             ))}
       </View>
     </Pressable>
   );
+});
+
+const styles = StyleSheet.create({
+  card: { width: '48%', borderRadius: 16, borderWidth: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 },
+  name: { flex: 1, fontSize: 13, fontWeight: '600' },
+  number: { fontSize: 11, fontVariant: ['tabular-nums'] },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chipPlaceholder: { width: 56, borderRadius: 999 },
 });
