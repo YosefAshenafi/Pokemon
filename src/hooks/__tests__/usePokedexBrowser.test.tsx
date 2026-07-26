@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
@@ -18,7 +19,11 @@ beforeEach(async () => {
   queryClient.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // The browser mounts the type index, which is 18 requests deep and outlives
+  // the assertion each test came for. Letting it settle here keeps its results
+  // from landing on a torn-down tree and flaking the run.
+  await waitFor(() => expect(queryClient.isFetching()).toBe(0), { timeout: 15000 });
   api.restore();
   queryClient.clear();
 });
