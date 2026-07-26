@@ -19,6 +19,50 @@ export const LIST_INITIAL_RENDER = 8;
 export const LIST_BATCH_SIZE = 8;
 export const LIST_WINDOW_SIZE = 7;
 
+/**
+ * How far a card's text may grow with the system font size.
+ *
+ * Not 1: the grid is two fixed-width columns, and unbounded scaling turns a
+ * name into four lines and breaks the row rhythm. Not 0 either - capping the
+ * multiplier still honours most of the range users actually set, and the row
+ * height below grows with it rather than clipping.
+ */
+export const CARD_MAX_FONT_SCALE = 1.3;
+
+/**
+ * The pieces of a card's height, in the order they stack. Kept as data rather
+ * than as Tailwind classes because `getItemLayout` promises FlatList an exact
+ * row height, and a promise derived from different numbers than the ones the
+ * card renders with is a promise that silently breaks.
+ */
+export const CARD_METRICS = {
+  border: 1,
+  padding: 12,
+  /** One line of the 13px name at default scale. */
+  title: 20,
+  gap: 8,
+  artwork: 96,
+  chips: 22,
+  /** Space below the card, before the next row. */
+  rowGap: 12,
+} as const;
+
+/** Height of one grid row at a given system font scale, including its gutter. */
+export function gridRowHeight(fontScale: number): number {
+  const scale = Math.min(fontScale, CARD_MAX_FONT_SCALE);
+  const { border, padding, title, gap, artwork, chips, rowGap } = CARD_METRICS;
+  return (
+    border * 2 +
+    padding * 2 +
+    Math.round(title * scale) +
+    gap +
+    artwork +
+    gap +
+    Math.round(chips * scale) +
+    rowGap
+  );
+}
+
 /** Fraction of a screen from the end at which the next page is requested. */
 export const LIST_END_REACHED_THRESHOLD = 0.4;
 

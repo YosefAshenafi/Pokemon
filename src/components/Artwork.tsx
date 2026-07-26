@@ -11,6 +11,13 @@ interface ArtworkProps {
   id: number;
   alt: string;
   className?: string;
+  /**
+   * Dimensions the caller needs to be exact, e.g. a card whose row height is
+   * promised to a FlatList. Deliberately narrower than a full style prop: both
+   * the image and its pokéball fallback must honour it, and only box metrics
+   * are meaningful to both.
+   */
+  style?: { width?: number; height?: number; marginTop?: number };
   /** When the detail is already loaded, its sprite URLs are authoritative. */
   pokemon?: Pokemon;
   placeholderSize?: number;
@@ -22,7 +29,14 @@ const PLACEHOLDER_COLOR = 'rgba(154, 160, 181, 0.4)';
  * Pokémon artwork, falling back to the default sprite and then a pokéball -
  * mega/gmax forms (ids above 10000) have no official artwork.
  */
-export function Artwork({ id, alt, className, pokemon, placeholderSize = 56 }: ArtworkProps) {
+export function Artwork({
+  id,
+  alt,
+  className,
+  style,
+  pokemon,
+  placeholderSize = 56,
+}: ArtworkProps) {
   const [failures, setFailures] = useState(0);
 
   const candidates = (
@@ -37,7 +51,7 @@ export function Artwork({ id, alt, className, pokemon, placeholderSize = 56 }: A
     return (
       <View
         className={className}
-        style={{ alignItems: 'center', justifyContent: 'center' }}
+        style={[{ alignItems: 'center', justifyContent: 'center' }, style]}
         accessibilityLabel={`${alt}, no artwork available`}
       >
         <Pokeball size={placeholderSize} color={PLACEHOLDER_COLOR} />
@@ -53,6 +67,7 @@ export function Artwork({ id, alt, className, pokemon, placeholderSize = 56 }: A
       contentFit="contain"
       transition={200}
       className={className}
+      style={style}
       onError={() => setFailures((count) => count + 1)}
     />
   );

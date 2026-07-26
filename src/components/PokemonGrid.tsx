@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { useCallback } from 'react';
-import { FlatList, Text } from 'react-native';
+import { FlatList, Platform, Text, useWindowDimensions } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
 
 import type { PokemonTypeIndex } from '@/api/pokeapi';
@@ -13,6 +13,7 @@ import {
   LIST_INITIAL_RENDER,
   LIST_WINDOW_SIZE,
   SCREEN_PADDING,
+  gridRowHeight,
 } from '@/constants/ui';
 
 import { PokemonCard } from './PokemonCard';
@@ -21,7 +22,10 @@ import { PokemonCard } from './PokemonCard';
  * Stable identity for "this card has no types". A fresh `[]` per render would
  * fail `PokemonCard`'s memo comparison and re-render every typeless card.
  */
-const NO_TYPES: string[] = [];
+const NO_TYPES: readonly string[] = [];
+
+/** Two columns, so a card's index maps to its row. */
+const COLUMNS = 2;
 
 interface PokemonGridProps {
   data: PokemonSummary[];
@@ -60,6 +64,11 @@ export function PokemonGrid({
   refreshing,
   empty,
 }: PokemonGridProps) {
+  // Rows grow with the system font size, so the height promised below has to be
+  // measured at the current scale rather than assumed at 1x.
+  const { fontScale } = useWindowDimensions();
+  const rowHeight = gridRowHeight(fontScale);
+
   const renderItem = useCallback(
     ({ item }: { item: PokemonSummary }) => (
       <PokemonCard
@@ -71,9 +80,22 @@ export function PokemonGrid({
         types={typesByName?.[item.name] ?? (typesPending ? undefined : NO_TYPES)}
         onPress={onSelect}
         onPressIn={onPrefetch}
+        fontScale={fontScale}
       />
     ),
-    [onSelect, onPrefetch, typesByName, typesPending],
+    [onSelect, onPrefetch, typesByName, typesPending, fontScale],
+  );
+
+  // Cards are a fixed size at a given font scale, so the list never has to
+  // measure a row: this is what keeps a fast fling from leaving blank cells.
+  // It is only sound because the card renders from the same `CARD_METRICS`.
+  const getItemLayout = useCallback(
+    (_: ArrayLike<PokemonSummary> | null | undefined, index: number) => ({
+      length: rowHeight,
+      offset: Math.floor(index / COLUMNS) * rowHeight,
+      index,
+    }),
+    [rowHeight],
   );
 
   return (
@@ -82,7 +104,7 @@ export function PokemonGrid({
       data={data}
       renderItem={renderItem}
       keyExtractor={(item) => item.name}
-      numColumns={2}
+      numColumns={COLUMNS}
       columnWrapperStyle={{ justifyContent: 'space-between' }}
       contentContainerStyle={{
         paddingHorizontal: SCREEN_PADDING,
@@ -95,9 +117,17 @@ export function PokemonGrid({
       onRefresh={onRefresh}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
+      // iOS does not resize the window for the keyboard the way Android's
+      // adjustResize does, so without this the last rows sit under it.
+      automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+      // Detaching off-screen rows from the native view tree is a clear win on
+      // Android's view system and has a history of clipping bugs on iOS, where
+      // the gain is smaller anyway.
+      removeClippedSubviews={Platform.OS === 'android'}
       initialNumToRender={LIST_INITIAL_RENDER}
       maxToRenderPerBatch={LIST_BATCH_SIZE}
       windowSize={LIST_WINDOW_SIZE}
+      getItemLayout={getItemLayout}
       ListFooterComponent={
         loadingMore ? (
           <ActivityIndicator

@@ -7,27 +7,27 @@ import { PokemonCard } from '../PokemonCard';
 
 describe('PokemonCard', () => {
   it('shows the formatted name and Pokédex number', () => {
-    render(<PokemonCard id={1} name="bulbasaur" types={['grass', 'poison']} onPress={jest.fn()} />);
+    render(<PokemonCard id={1} name="bulbasaur" types={['grass', 'poison']} onPress={jest.fn()} fontScale={1} />);
 
     expect(screen.getByText('Bulbasaur')).toBeTruthy();
     expect(screen.getByText('#001')).toBeTruthy();
   });
 
   it('renders a chip for each of its types', () => {
-    render(<PokemonCard id={1} name="bulbasaur" types={['grass', 'poison']} onPress={jest.fn()} />);
+    render(<PokemonCard id={1} name="bulbasaur" types={['grass', 'poison']} onPress={jest.fn()} fontScale={1} />);
 
     expect(screen.getByText('Grass')).toBeTruthy();
     expect(screen.getByText('Poison')).toBeTruthy();
   });
 
   it('shows placeholder chips while the type index is still loading', () => {
-    render(<PokemonCard id={1} name="bulbasaur" onPress={jest.fn()} />);
+    render(<PokemonCard id={1} name="bulbasaur" onPress={jest.fn()} fontScale={1} />);
 
     expect(screen.getAllByTestId('type-chip-placeholder')).toHaveLength(2);
   });
 
   it('shows no chips at all once the type index settles without types for it', () => {
-    render(<PokemonCard id={1} name="bulbasaur" types={[]} onPress={jest.fn()} />);
+    render(<PokemonCard id={1} name="bulbasaur" types={[]} onPress={jest.fn()} fontScale={1} />);
 
     expect(screen.queryAllByTestId('type-chip-placeholder')).toHaveLength(0);
     expect(screen.queryByText('Grass')).toBeNull();
@@ -35,7 +35,7 @@ describe('PokemonCard', () => {
 
   it('invokes onPress with the Pokémon name when tapped', () => {
     const onPress = jest.fn();
-    render(<PokemonCard id={1} name="bulbasaur" types={['grass', 'poison']} onPress={onPress} />);
+    render(<PokemonCard id={1} name="bulbasaur" types={['grass', 'poison']} onPress={onPress} fontScale={1} />);
 
     fireEvent.press(screen.getByRole('button'));
 
@@ -43,7 +43,7 @@ describe('PokemonCard', () => {
   });
 
   it('dims and shrinks while held down', () => {
-    render(<PokemonCard id={1} name="bulbasaur" types={['grass']} onPress={jest.fn()} />);
+    render(<PokemonCard id={1} name="bulbasaur" types={['grass']} onPress={jest.fn()} fontScale={1} />);
     const card = screen.getByRole('button');
 
     expect(StyleSheet.flatten(card.props.style)?.opacity).toBeUndefined();
@@ -58,7 +58,7 @@ describe('PokemonCard', () => {
   it('invokes onPressIn on press-in so the detail can be prefetched', () => {
     const onPressIn = jest.fn();
     render(
-      <PokemonCard id={1} name="bulbasaur" types={['grass']} onPress={jest.fn()} onPressIn={onPressIn} />,
+      <PokemonCard id={1} name="bulbasaur" types={['grass']} onPress={jest.fn()} onPressIn={onPressIn} fontScale={1} />,
     );
 
     fireEvent(screen.getByRole('button'), 'pressIn');

@@ -29,18 +29,28 @@ export function typeColor(type: string): string {
   return TYPE_COLORS[type.toLowerCase() as PokemonType] ?? FALLBACK_COLOR;
 }
 
+// Memoised because every chip asks the same question of the same 18 colours,
+// and a grid can hold dozens of chips that re-render on every scroll batch.
+const foregroundCache = new Map<string, string>();
+
 /**
  * Picks a readable text color for a given background so light chips
  * (electric, ice, ground, etc.) don't end up with unreadable white text.
  */
 export function textColorOn(background: string): string {
+  const cached = foregroundCache.get(background);
+  if (cached) return cached;
+
   const hex = background.replace('#', '');
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);
   // Perceived luminance (ITU-R BT.709)
   const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  return luminance > 0.6 ? '#1B2137' : '#FFFFFF';
+  const foreground = luminance > 0.6 ? '#1B2137' : '#FFFFFF';
+
+  foregroundCache.set(background, foreground);
+  return foreground;
 }
 
 /**
