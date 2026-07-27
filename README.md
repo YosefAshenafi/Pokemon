@@ -25,16 +25,16 @@ A Pokémon mobile app built with **Expo** for the Senior Developer Assessment. B
 
 ## Tech stack
 
-| Requirement            | How it's used                                                                             |
-| ---------------------- | ----------------------------------------------------------------------------------------- |
-| Expo (SDK 54)          | App platform + Expo Router for navigation                                                 |
-| TypeScript             | Strict mode throughout                                                                    |
-| React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme               |
+| Requirement            | How it's used                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------- |
+| Expo (SDK 54)          | App platform + Expo Router for navigation                                                       |
+| TypeScript             | Strict mode throughout                                                                          |
+| React Native Paper     | Searchbar, buttons, activity indicators, the filter bottom sheet, MD3 theme                     |
 | NativeWind (v4)        | Layout/spacing/typography styling via Tailwind classes, except the list cells (see Performance) |
-| TanStack React Query   | Server state: caching, infinite scroll pagination, prefetching, retries                   |
-| Zod                    | Parses every PokeAPI response at the boundary; the TS types are inferred from the schemas |
-| AsyncStorage persister | Persists the small, bounded queries across launches for offline use                       |
-| expo-image             | Cached, fading artwork images                                                             |
+| TanStack React Query   | Server state: caching, infinite scroll pagination, prefetching, retries                         |
+| Zod                    | Parses every PokeAPI response at the boundary; the TS types are inferred from the schemas       |
+| AsyncStorage persister | Persists the small, bounded queries across launches for offline use                             |
+| expo-image             | Cached, fading artwork images                                                                   |
 
 ## Getting started
 
@@ -74,30 +74,12 @@ npm run lint           # ESLint
 
 Measured across every file in `src/`, not only the ones tests happen to import. `coverageThreshold` enforces 100% on all four metrics.
 
-All three commands run on every push and pull request via [GitHub Actions](.github/workflows/ci.yml), so an untested line fails the build as readily as a failing assertion. CI also runs `npm run bundle:check`, which exports the Android bundle and fails if it crosses 6 MB — a dependency that doubles the download is invisible to the other three.
-
-### Measured
-
-| What                                           | Value                                                           |
-| ---------------------------------------------- | --------------------------------------------------------------- |
-| Android JS bundle (Hermes bytecode)            | 5.00 MB (measured in CI), against a 6 MB ceiling                |
-| Zod parse of the 1302-entry name index         | 0.25 ms                                                         |
-| Grid at ~7 pages deep, iPhone 15 Pro simulator | No blank cells, no row drift (Maestro fling test)               |
-| Grid artwork, per card                         | ~15 KB resized WebP via wsrv.nl, down from the ~140 KB original |
-
 ### End-to-end
 
 ```bash
 maestro test .maestro/smoke.yaml          # standalone build (expo run:ios / run:android)
 maestro test .maestro/smoke-expo-go.yaml  # Expo Go workflow; needs `npx expo start` running
 ```
-
-One flow — launch, search, open a detail, go back — covering the one thing the Jest
-suite cannot: that the app runs on a device. **Both variants pass** on an iPhone 15 Pro
-simulator (iOS 17.5): the standalone flow against a Release build from `npx expo run:ios`,
-and the Expo Go flow against Metro. An earlier session also fling-tested the grid seven
-pages deep with no blank cells or row drift, which is the `getItemLayout` contract
-holding on a real screen. Neither flow is in CI, which has no device attached.
 
 ### No mocking of application code
 
@@ -131,50 +113,14 @@ src/
   test/                # Test harness: the fake PokeAPI, app renderer, appearance & press helpers, CSS stub
 ```
 
-## Releases
-
-Build profiles live in [eas.json](eas.json): `development`, `preview` and `production`.
-
-**`app.json` owns both the version and the build number.** `version` (1.0.0) is the
-user-facing string, and `runtimeVersion` is tied to it — an over-the-air update can only
-reach a binary built from the same native runtime. `ios.buildNumber` and
-`android.versionCode` sit beside it and are bumped by hand per release, with
-`appVersionSource: "local"` telling EAS to read them from here. Everything a build needs
-is in the repo, so cloning it is enough — no EAS project or account is required to build.
-Once releases run through CI rather than by hand, the build number should move to EAS
-(`appVersionSource: "remote"` + `autoIncrement`), which is the version of this decision
-that removes the human from the loop.
-
-## Observability
-
-Failures are reported through one seam, `src/api/reportError.ts`, called from three
-places: the query cache (every failed query), the route error boundary (any render that
-throws), and nothing else. **No reporter is installed** — `reportError` is a no-op until
-`setErrorReporter` is called, which is deliberate: the call sites are the part that is
-awkward to retrofit and they are in place, so adopting a vendor is one line in
-`src/app/_layout.tsx`:
-
-```ts
-import * as Sentry from "@sentry/react-native";
-setErrorReporter((error, context) =>
-  Sentry.captureException(error, { extra: context }),
-);
-```
-
-Reporting is filtered by `ApiError.kind`. A dropped connection or a timeout is not a
-defect and is not reported — the type index alone would send nineteen of them from one
-offline launch. What is reported is the class of failure that means the API moved:
-a response that will not parse, or one that no longer matches its schema.
-
 ## Performance
 
 - **Virtualized list.** A `FlatList`, not `ScrollView.map()`: only the visible window mounts, so memory stays flat however deep you scroll. Tuned for the 2-column grid: `initialNumToRender={8}`, `maxToRenderPerBatch={8}`, `windowSize={7}`, `onEndReachedThreshold={0.4}`.
 - **No N+1.** Card types come from the one shared type index (18 requests), not a detail fetch per card: the biggest performance decision in the app.
 - **Prefetch on press-in.** Buys ~100-300 ms before the navigation animation ends, usually avoiding a spinner entirely. The search index is prefetched on field focus for the same reason.
-- **Deferred search, not debounced.** There is no request per keystroke to suppress - the name index is fetched once and filtered locally - so the cost is rendering. `useDeferredValue` keeps the field responsive without adding the latency a debounce would.
 - **One request per refresh.** Pull-to-refresh collapses the infinite query to its first page before refetching; `refetch()` alone would re-request every page loaded so far.
-- **Cheap re-renders.** `PokemonCard` is `React.memo` and purely presentational, so fast scrolling re-runs no data logic. The type-filter intersection uses a module-scope `combine`, letting React Query structurally share the result array across renders. The card subtree is styled with plain `StyleSheet` rather than Tailwind classes: cells render inside FlatList's speculative window, where NativeWind's render-time colour-scheme subscription both costs time and leaks React 19's "update on a component that hasn't mounted yet" warning on theme flips.
+- **Cheap re-renders.** `PokemonCard` is `React.memo` and purely presentational, so fast scrolling re-runs no data logic.
 - **Progressive loading.** The type index publishes each batch of six as it lands, and skeleton cards match the real card geometry, so nothing shifts when data arrives.
-- **No row measurement.** Card geometry is data (`CARD_METRICS`), so the grid can give `FlatList` an exact `getItemLayout` instead of measuring every row — the usual cause of blank cells during a fast Android fling. The height scales with the system font size, so capping text growth and pinning row height stay consistent. `removeClippedSubviews` is deliberately left off until that can be watched on hardware: it decides what to detach from the layout `getItemLayout` asserts, and pairing the two unverified trades a visible bug against an unmeasured gain.
-- **Right-sized images.** Grid cards ask wsrv.nl for the official art resized to the card's pixel size — ~15 KB of WebP instead of the ~140 KB original, so a first screen of cards costs ~360 KB rather than ~3.5 MB. The detail screen keeps the full-resolution file. `expo-image` handles on-disk caching and a 200 ms fade-in, and the fallback chain (thumbnail → official art → sprite → drawn pokéball) means a resizer outage or a 404 on a mega form never leaves a broken image.
+- **No row measurement.** Card geometry is data (`CARD_METRICS`), so the grid can give `FlatList` an exact `getItemLayout` instead of measuring every row — the usual cause of blank cells during a fast Android fling.
+- **Right-sized images.** Grid cards ask wsrv.nl for the official art resized to the card's pixel size — ~15 KB of WebP instead of the ~140 KB original.
 - **React Compiler on** via `experiments.reactCompiler` in `app.json`, so components are auto-memoized at build time.
